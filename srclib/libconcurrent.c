@@ -3,6 +3,8 @@
 #include "globals.h"
 #include "libconcurrent.h"
 
+// conc = concurrent / concurrency
+
 /* routine es una función con signature igual que attention_routine,
  * es decir, compatible con los hilos de pthread */
 int conc_launch(void*(*routine)(void*), void* arg) {
