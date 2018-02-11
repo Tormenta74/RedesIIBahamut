@@ -1,19 +1,19 @@
-#Practica 1
+# Practica 1
 
-##Servidor HTTP en C
+## Servidor HTTP en C
 
-###Diego Sáinz de Medrano y Fernando Villar
-
----
-
-##Introducción
+### Diego Sáinz de Medrano y Fernando Villar
 
 ---
 
-##Desarrollo técnico
+## Introducción
 
 ---
 
-##Conclusiones técnicas
+## Desarrollo técnico
 
-##Conclusiones personales
+---
+
+## Conclusiones técnicas
+
+## Conclusiones personales
