@@ -7,6 +7,7 @@ SRCLIBDIR = srclib
 
 SERVER = server
 
+FILES = fileserver
 HTTP = http
 ECHO = echo
 
@@ -32,6 +33,10 @@ before:
 	@[ -d $(BUILDLIBDIR) ] || mkdir $(BUILDLIBDIR)
 
 $(ECHO): $(BUILDDIR)/$(ECHO).o $(BUILDDIR)/$(SERVER).o
+	@echo "Enlazando $(notdir $@): $(notdir $^)"
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 

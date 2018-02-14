@@ -33,7 +33,7 @@ int server_setup(const char* servername, uint32_t local_addr, uint16_t local_por
         print("errno (socket): %s.", strerror(errno));
         return ERR;
     }
-    print("Connection socket opened with file descriptor %d.", conn_socket);
+    print("Connection socket opened with file descriptor %d.\n", conn_socket);
 
     if(setsockopt(conn_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
         print("Could not set socket options (%s:%d).", __FILE__, __LINE__);
@@ -72,6 +72,13 @@ int server_setup(const char* servername, uint32_t local_addr, uint16_t local_por
     active = 1;
     return OK;
 }
+
+/*
+
+select
+
+
+*/
 
 /* mientras "active" sea 1, el servidor se mantiene *
  * en un bucle de aceptar nuevas conexiones y       *
