@@ -11,7 +11,7 @@ FILES = fileserver
 HTTP = http
 ECHO = echo
 
-TARGET = $(ECHO)
+TARGET = $(FILES)
 
 LIBS = libdaemon libconcurrent libtcp
 _LIB = libredes2

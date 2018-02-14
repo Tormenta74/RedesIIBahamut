@@ -62,28 +62,61 @@ int server_setup(const char* servername, uint32_t local_addr, uint16_t local_por
         return ERR;
     }
 
-    if(mutex_init(&fd_set_lock) == ERR) {
-        print("Could not init fd mutex (%s:%d).", __FILE__, __LINE__);
-        print("errno (pthread_mutex_init): %s.", strerror(errno));
-        return ERR;
-    }
+    //if(mutex_init(&fd_set_lock) == ERR) {
+    //    print("Could not init fd mutex (%s:%d).", __FILE__, __LINE__);
+    //    print("errno (pthread_mutex_init): %s.", strerror(errno));
+    //    return ERR;
+    //}
 
     print("Now listening.");
     active = 1;
     return OK;
 }
 
-/*
-
-select
-
-
-*/
-
 /* mientras "active" sea 1, el servidor se mantiene *
  * en un bucle de aceptar nuevas conexiones y       *
  * despachando hilos para atenderlas                */
 int server_accept_loop(attention_routine *fn) {
+    int new_socket;
+    uint8_t *reader;
+    struct sockaddr_in addr;
+
+
+    while(active) {
+        // inicializamos new_socket
+        new_socket = 0;
+
+        // inicializamos los campos de addr
+        addr.sin_family=0;
+        addr.sin_port=0;
+        addr.sin_addr.s_addr=0;
+        bzero(addr.sin_zero,8*sizeof(char));
+
+        if(tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
+            print("Could not accept conection request (%s:%d).", __FILE__, __LINE__);
+            print("errno (accept): %s.", strerror(errno));
+            active=0;
+            return ERR;
+        }
+
+        // leemos los datos de la nueva conexión
+        reader = (uint8_t*)&(addr.sin_addr.s_addr);
+        print("New connection: address = %d.%d.%d.%d", reader[0], reader[1], reader[2], reader[3]);
+        print("New connection: port = %d.", addr.sin_port);
+        print("Conection accepted: redirected to socket %d.", new_socket);
+
+
+        // lanzamos el hilo de atención, pasándole el número del socket
+        int* s = malloc(sizeof(int));
+        *s = new_socket;
+        conc_launch(fn, (void*)s);
+    }
+}
+
+/* mientras "active" sea 1, el servidor se mantiene *
+ * en un bucle de aceptar nuevas conexiones y       *
+ * despachando hilos para atenderlas                */
+int server_accept_loop_old(attention_routine *fn) {
     int i, new_socket;
     uint8_t *reader;
     struct sockaddr_in addr;
@@ -100,12 +133,16 @@ int server_accept_loop(attention_routine *fn) {
         read_set = active_set;
         mutex_unlock(&fd_set_lock);
 
+        print("Selecting.");
+
         if(select(n_conn, &read_set, NULL, NULL, NULL) < 0) {
             print("Error while listening to the sockets (%s:%d).", __FILE__, __LINE__);
             print("errno (select): %s.", strerror(errno));
             active = 0;
             return ERR;
         }
+
+        print("He salío de select.");
 
         for(i=0; i<FD_SETSIZE; i++) {
             if(FD_ISSET(i,&read_set) && i == conn_socket) {
