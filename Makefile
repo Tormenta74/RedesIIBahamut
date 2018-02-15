@@ -13,7 +13,7 @@ ECHOS = echo
 
 TARGET = $(FILES)
 
-LIBS = libdaemon libconcurrent libtcp
+LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
 LIB = $(patsubst %,$(LIBSDIR)/%.a, $(_LIB))
 
