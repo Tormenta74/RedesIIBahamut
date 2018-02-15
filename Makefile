@@ -7,9 +7,9 @@ SRCLIBDIR = srclib
 
 SERVER = server
 
-FILES = fileserver
-HTTP = http
-ECHO = echo
+FILES = file
+HTTPS = http
+ECHOS = echo
 
 TARGET = $(FILES)
 
@@ -32,7 +32,7 @@ before:
 	@[ -d $(BUILDDIR) ] || mkdir $(BUILDDIR)
 	@[ -d $(BUILDLIBDIR) ] || mkdir $(BUILDLIBDIR)
 
-$(ECHO): $(BUILDDIR)/$(ECHO).o $(BUILDDIR)/$(SERVER).o
+$(ECHOS): $(BUILDDIR)/$(ECHOS).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -55,8 +55,8 @@ $(BUILDLIBDIR)/%.o: $(SRCLIBDIR)/%.c
 	$(CC) -o $@ -c $^ $(CFLAGS)
 
 clean:
-	@echo "Limpiando build/ y $(TARGET)"
-	@rm -rf ./$(BUILDDIR)/* ./$(TARGET)
+	@echo "Limpiando objetos y ejecutables"
+	@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS)
 
 clean_libs:
 	@echo "Limpiando librerías"
