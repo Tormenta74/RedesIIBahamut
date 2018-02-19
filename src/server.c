@@ -15,8 +15,8 @@
 
 int conn_socket;                // socket "maestro"
 int active;                     // control del bucle del servidor
-pthread_mutex_t fd_set_lock;    // mutex del set de sockets
-int n_conn;                     // número del socket abierto más alto
+pthread_mutex_t nconn_lock;     // mutex del set de sockets
+int n_conn;                     // número de clientes conectados
 fd_set active_set, read_set;    // set de sockets y set de control
 
 /* inicia el modo demonio, abre el socket de conexión llama a bind y a listen */
@@ -62,11 +62,11 @@ int server_setup(const char* servername, uint32_t local_addr, uint16_t local_por
         return ERR;
     }
 
-    //if(mutex_init(&fd_set_lock) == ERR) {
-    //    print("Could not init fd mutex (%s:%d).", __FILE__, __LINE__);
-    //    print("errno (pthread_mutex_init): %s.", strerror(errno));
-    //    return ERR;
-    //}
+    if(mutex_init(&nconn_lock) == ERR) {
+        print("Could not init mutex (%s:%d).", __FILE__, __LINE__);
+        print("errno (pthread_mutex_init): %s.", strerror(errno));
+        return ERR;
+    }
 
     print("Now listening.");
     active = 1;
@@ -86,11 +86,11 @@ int server_accept_loop(attention_routine *fn) {
         // inicializamos new_socket
         new_socket = 0;
 
-        // inicializamos los campos de addr
-        addr.sin_family=0;
-        addr.sin_port=0;
-        addr.sin_addr.s_addr=0;
-        bzero(addr.sin_zero,8*sizeof(char));
+        // inicializamos / limpiamos los campos de addr
+        addr.sin_family = 0;
+        addr.sin_port = 0;
+        addr.sin_addr.s_addr = 0;
+        bzero(addr.sin_zero, 8*sizeof(char));
 
         if(tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
             print("Could not accept conection request (%s:%d).", __FILE__, __LINE__);
@@ -109,7 +109,15 @@ int server_accept_loop(attention_routine *fn) {
         // lanzamos el hilo de atención, pasándole el número del socket
         int* s = malloc(sizeof(int));
         *s = new_socket;
-        conc_launch(fn, (void*)s);
+
+        mutex_lock(&nconn_lock);
+        if(++n_conn <= MAX_CLIENTS) {
+            conc_launch(fn, (void*)s);
+        } else {
+            // TODO: either nothing, or send a message to the client informing them
+            // that we are not accepting new connections
+        }
+        mutex_unlock(&nconn_lock);
     }
 }
 
@@ -129,9 +137,9 @@ int server_accept_loop_old(attention_routine *fn) {
     bzero(addr.sin_zero,8*sizeof(char));
 
     while(active) {
-        mutex_lock(&fd_set_lock);
+        mutex_lock(&nconn_lock);
         read_set = active_set;
-        mutex_unlock(&fd_set_lock);
+        mutex_unlock(&nconn_lock);
 
         print("Selecting.");
 
@@ -159,9 +167,9 @@ int server_accept_loop_old(attention_routine *fn) {
                 print("New connection: port = %d.", addr.sin_port);
                 print("Conection accepted: redirected to socket %d.", new_socket);
 
-                mutex_lock(&fd_set_lock);
+                mutex_lock(&nconn_lock);
                 FD_SET(new_socket,&active_set);
-                mutex_unlock(&fd_set_lock);
+                mutex_unlock(&nconn_lock);
                 n_conn = new_socket+1;
 
                 addr.sin_family = 0;

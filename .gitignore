@@ -4,4 +4,4 @@ lib/
 *.o
 
 echo
-fileserver
+file

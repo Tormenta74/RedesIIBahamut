@@ -1,6 +1,8 @@
 #ifndef _SERVER_H
 #define _SERVER_H
 
+#define MAX_CLIENTS 512
+
 /* prototipo de función de atención a un socket 
  * compatible con el formato de los hilos de p_thread.
  * el parámetro de tipo void* será, por convención, 
