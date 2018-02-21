@@ -3,6 +3,7 @@
 
 #include <syslog.h>
 
+#define MAX_CHAR 2048
 #define OK  0
 #define ERR -1
 
