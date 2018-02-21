@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         printf("Could not set signal handler (%s:%d).", __FILE__, __LINE__);
         exit(ERR);
     }
-    printf("SIGINT handler set.");
+    printf("SIGINT handler set.\n");
 
     printf("Going down as 'echo_server'.\n");
 

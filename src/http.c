@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     //status = server_accept_loop(http);
 
-    status = config_parse("httprc", &so);
+    status = config_parse("server.conf", &so);
 
     return status;
 }

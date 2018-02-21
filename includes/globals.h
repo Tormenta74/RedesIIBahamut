@@ -11,6 +11,7 @@ char log_buffer[1024];
 //#ifdef VERBOSE
 #define print(...) {\
     sprintf(log_buffer, __VA_ARGS__);\
+    sprintf(log_buffer, "%s\n", log_buffer);\
     fprintf(stdout, log_buffer);\
 }
 //#else
