@@ -24,7 +24,7 @@ int server_setup(const char* servername, uint32_t local_addr, uint16_t local_por
     uint8_t *reader; // usado para leer correctamente la dirección IP
     int enable = 1;
 
-    daemonize(servername);
+    //daemonize(servername);
 
     /* abrimos el socket de conexiones */
     conn_socket = tcp_open_socket();

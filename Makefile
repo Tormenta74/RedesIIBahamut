@@ -12,7 +12,7 @@ FILES = file
 HTTPS = http
 ECHOS = echo
 
-TARGET = $(ECHOS)
+TARGET = $(FILES)
 
 LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
