@@ -8,7 +8,7 @@
 #include "globals.h"
 #include "libdaemon.h"
 
-int daemonize(const char* proc_name) {
+int daemonize(const char *proc_name, const char *root_path) {
     pid_t pid = fork();
 
     if(pid > 0) { exit(OK); }
@@ -24,8 +24,8 @@ int daemonize(const char* proc_name) {
         return ERR;
     }
 
-    if((chdir("/")) < 0) {
-        syslog(LOG_ERR, "Error changing directory to \"/\".");
+    if((chdir(root_path)) < 0) {
+        syslog(LOG_ERR, "Error changing directory to \"%s\".", root_path);
         return ERR;
     }
 
