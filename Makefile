@@ -6,13 +6,14 @@ SRCDIR = src
 SRCLIBDIR = srclib
 
 CONFIG = config
+PARSER = parser
 SERVER = server
 
 FILES = file
 HTTPS = http
 ECHOS = echo
 
-TARGET = $(FILES)
+TARGET = $(HTTPS)
 
 LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
@@ -41,7 +42,7 @@ $(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o
+$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(PARSER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
