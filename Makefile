@@ -12,7 +12,7 @@ FILES = file
 HTTPS = http
 ECHOS = echo
 
-TARGET = $(HTTPS)
+TARGET = $(ECHOS)
 
 LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
@@ -31,7 +31,7 @@ all: before lib $(TARGET)
 
 before:
 	@[ -d $(BUILDDIR) ] || mkdir $(BUILDDIR)
-	@[ -d $(BUILDLIBDIR) ] || mkdir $(BUILDLIBDIR)
+	@[ -d $(BUILDLIBDIR) ] || mkdir -p $(BUILDLIBDIR)
 
 $(ECHOS): $(BUILDDIR)/$(ECHOS).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
