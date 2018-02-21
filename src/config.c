@@ -22,8 +22,10 @@ int config_parse(char* filename, struct server_options *so) {
 
     so->server_root = NULL;
     so->server_signature = NULL;
-    so->max_clients = 0;
-    so->listen_port = 0;
+    so->max_clients = 10;
+    so->listen_port = 8000;
+    so->daemon = 1;
+    so->iterative = 0;
 
     while((read = getline(&line, &len, f)) != ERR) {
         // line is a comment
@@ -65,6 +67,20 @@ int config_parse(char* filename, struct server_options *so) {
             }
             continue;
         }
+        if(strcmp(option, "daemon") == 0) {
+            if((so->daemon = atoi(rest)) <= 0) {
+                // this shit ain't right
+                return ERR;
+            }
+            continue;
+        }
+        if(strcmp(option, "iterative") == 0) {
+            if((so->iterative = atoi(rest)) <= 0) {
+                // this shit ain't right
+                return ERR;
+            }
+            continue;
+        }
     } /* while */
 
     if(line) {
@@ -73,10 +89,6 @@ int config_parse(char* filename, struct server_options *so) {
 
     return OK;
 }
-
-// if "${workspace}/httprc" file exists, it will try to load it
-// else, we load some default values
-int config_load_defaults(struct server_options *so);
 
 void config_print(struct server_options *so) {
     if(!so) {
