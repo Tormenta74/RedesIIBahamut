@@ -5,6 +5,7 @@
 #include <stdlib.h>         // malloc
 #include <string.h>         // strerror
 #include <strings.h>        // bzero
+#include <unistd.h>         // getpid
 
 #include "globals.h"
 #include "config.h"
@@ -77,14 +78,31 @@ void *echo (void* args) {
 }
 
 int main(int argc, char *argv[]) {
-    int status;
+    int status = ERR;
     struct server_options so;
 
-    status = config_parse("server.conf", &so);
+    // Opcional: pasando como parámetros "--config path/to/my/config/file"
+    // podemos cambiar el fichero de configuración. De lo contrario, usamos
+    // server.conf, en la raíz
+    if(argc != 1) {
+        if(strcmp(argv[1], "--config") != 0) {
+            fprintf(stderr, "Unrecognized option: %s\n", argv[1]);
+            return ERR;
+        } else {
+            printf("Loading alternative configuration file.\n");
+            status = config_parse(argv[2], &so);
+        }
+    } else {
+        status = config_parse("server.conf", &so);
+    }
 
-    if(status != ERR) {
-        printf("Server options:\n");
-        config_print(&so);
+    printf("Configuration:\n");
+    printf("pid: %d\n", getpid());
+    config_print(&so);
+
+    if(status == ERR) {
+        printf("Bad server options\n");
+        return ERR;
     }
 
     status = server_setup_woptions(&so);

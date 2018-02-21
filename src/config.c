@@ -68,14 +68,14 @@ int config_parse(char* filename, struct server_options *so) {
             continue;
         }
         if(strcmp(option, "daemon") == 0) {
-            if((so->daemon = atoi(rest)) <= 0) {
+            if((so->daemon = atoi(rest)) < 0) {
                 // this shit ain't right
                 return ERR;
             }
             continue;
         }
         if(strcmp(option, "iterative") == 0) {
-            if((so->iterative = atoi(rest)) <= 0) {
+            if((so->iterative = atoi(rest)) < 0) {
                 // this shit ain't right
                 return ERR;
             }

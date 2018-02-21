@@ -31,7 +31,7 @@ int server_setup_woptions(struct server_options *so) {
     }
 
     if(so->daemon == 1) {
-        if(daemonize(so->server_signature, so->server_signature) == ERR) {
+        if(daemonize(so->server_signature, so->server_root) == ERR) {
             print("Bad daemonize.");
             return ERR;
         }
