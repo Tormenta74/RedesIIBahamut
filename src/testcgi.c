@@ -9,14 +9,6 @@
 #include "cgi.h"
 #include "remap-pipe-fds.h"
 
-#define R 0
-#define W 1
-
-#define	PARENT_READ     readpipe[R]
-#define	CHILD_WRITE     readpipe[W]
-#define CHILD_READ      writepipe[R]
-#define PARENT_WRITE	writepipe[W]
-
 int main(int argc, char *argv[]) {
     int status;
     char *out;
