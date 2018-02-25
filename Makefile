@@ -6,13 +6,16 @@ SRCDIR = src
 SRCLIBDIR = srclib
 
 CONFIG = config
+SCRIPT = scripts
 SERVER = server
+DUPER = remap-pipe-fds
+TESTREGEX = testregex
 
 FILES = file
 HTTPS = http
 ECHOS = echo
 
-TARGET = $(HTTPS)
+TARGET = $(TESTREGEX)
 
 LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
@@ -42,6 +45,10 @@ $(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(SERVER).o
+	@echo "Enlazando $(notdir $@): $(notdir $^)"
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(TESTREGEX): $(BUILDDIR)/$(TESTREGEX).o $(BUILDDIR)/$(DUPER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
