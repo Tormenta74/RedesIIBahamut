@@ -6,16 +6,17 @@ SRCDIR = src
 SRCLIBDIR = srclib
 
 CONFIG = config
-SCRIPT = scripts
+SCRIPT = cgi
 SERVER = server
 DUPER = remap-pipe-fds
-TESTREGEX = testregex
+
+TESTCGI = testcgi
 
 FILES = file
 HTTPS = http
 ECHOS = echo
 
-TARGET = $(TESTREGEX)
+TARGET = $(TESTCGI)
 
 LIBS = libdaemon libconcurrent libtcp picohttpparser
 _LIB = libredes2
@@ -48,7 +49,7 @@ $(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(TESTREGEX): $(BUILDDIR)/$(TESTREGEX).o $(BUILDDIR)/$(DUPER).o
+$(TESTCGI): $(BUILDDIR)/$(TESTCGI).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -68,7 +69,7 @@ $(BUILDLIBDIR)/%.o: $(SRCLIBDIR)/%.c
 
 clean:
 	@echo "Limpiando objetos y ejecutables"
-	@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS)
+	@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS) ./$(TESTCGI)
 
 clean_libs:
 	@echo "Limpiando librerías"
