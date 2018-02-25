@@ -19,10 +19,10 @@
 #define PARENT_WRITE	writepipe[W]
 
 int fork_exec(const char *program, const char *resource, const char *input, int len, char **output) {
-    int status = ERR, nread;
+    int status = ERR, nread = 0, output_size = 0;
     int writepipe[2], readpipe[2];
     pid_t pid;
-    char buffer[MAX_SCRIPT_LINE_OUTPUT];
+    char buffer[MAX_SCRIPT_LINE_OUTPUT], aux[MAX_SCRIPT_LINE_OUTPUT];
 
     //
     // open them pipes
@@ -62,7 +62,7 @@ int fork_exec(const char *program, const char *resource, const char *input, int 
         execlp(program, program, resource, (char*)NULL);
 
         // if we got here, we fucked up
-        
+
         return ERR;
 
     } else {
@@ -86,13 +86,25 @@ int fork_exec(const char *program, const char *resource, const char *input, int 
 
         // hear what it has to say
 
-        nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT);
+        bzero(aux, MAX_SCRIPT_LINE_OUTPUT);
 
-        if(nread <= 0) {
-            return ERR;
+        while((nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT)) >= 0) {
+            sprintf(aux, "%s%s", aux, buffer);
+            output_size += nread;
+
+            // "\n" means there was a new line (in python)
+            // "\000" means there was a new line (in php)
+            //
+            // Sigh.
+            //
+            // "\r\n" afterwards means the script sent a line with just that
+            if(strstr(buffer, "\n\r\n") != NULL
+                    || strstr(buffer, "\000\r\n") != NULL) {
+                break;
+            }
         }
 
-        *output = strndup(buffer, nread);
+        *output = strndup(aux, output_size);
 
         return OK;
     }
