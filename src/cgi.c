@@ -3,11 +3,11 @@
 #include <regex.h>
 
 #include "globals.h"
-#include "scripts.h"
+#include "cgi.h"
 
 regex_t py, php;
 
-int script_module_setup() {
+int cgi_module_setup() {
     int status;
 
     status = regcomp(&py, "^.*\\.py$", 0);
@@ -26,7 +26,7 @@ int script_module_setup() {
     return OK;
 }
 
-int script_exec(const char *resource) {
+int cgi_exec_script(const char *resource) {
     int status;
     char errbuf[128];
 
