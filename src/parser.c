@@ -8,6 +8,9 @@
 #include "parser.h"
 #include "picohttpparser.h"
 
+/****************************************************************/
+/* HEADER CONSTRUCTIONS */
+
 // returns the current date in RFC 1123 format
 // (the char* array is allocated; it's the responsability
 // of the caller to free it)
@@ -30,8 +33,36 @@ char *header_date() {
     return date_buf;
 }
 
+/****************************************************************/
+/* DATA STRUCTURES UTILS */
+
+void request_data_print(struct http_req_data *rd) {
+    int i = 0;
+
+    print("HTTP version: %d", rd->version);
+    print("Method: %s", rd->method);
+    print("Path: %s", rd->path);
+    print("\nHeaders:");
+
+    for(i=0; i<rd->num_headers; i++) {
+        print("%s\t%s", rd->headers[i].name, rd->headers[i].value);
+    }
+}
+
+void request_data_free(struct http_req_data *rd) {
+    if(rd->method) {
+        free(rd->method);
+    }
+    if(rd->path) {
+        free(rd->path);
+    }
+}
+
+/****************************************************************/
+/* PARSING REQUESTS AND RESPONSES */
+
 /* wraps phr_parse_request and returns required information in a simple way */
-int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data) {
+int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
     char *method_aux, *path_aux;
     size_t method_len, path_len, nheaders_aux;
     struct phr_header headers_aux[MAX_HEADERS];
@@ -49,49 +80,37 @@ int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data)
 
     /* set method, path, http version and number of headers */
 
-    req_data->method = (char*)malloc(method_len*sizeof(char));
-    if(!req_data->method) {
+    rd->method = (char*)malloc(method_len*sizeof(char));
+    if(!rd->method) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
-    sprintf(req_data->method, "%.*s", (int)method_len, method_aux);
+    sprintf(rd->method, "%.*s", (int)method_len, method_aux);
 
-    req_data->path = (char*)malloc(path_len*sizeof(char));
-    if(!req_data->path) {
+    rd->path = (char*)malloc(path_len*sizeof(char));
+    if(!rd->path) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
-    sprintf(req_data->path, "%.*s", (int)path_len, path_aux);
+    sprintf(rd->path, "%.*s", (int)path_len, path_aux);
 
-    req_data->version = minor_version;
-    req_data->num_headers = nheaders_aux;
+    rd->version = minor_version;
+    rd->num_headers = nheaders_aux;
 
     /*                                                       */
     /* fills http_headers structure with pairs {name, value} */
     /*                                                       */
 
-    req_data->num_headers = nheaders_aux;
+    rd->num_headers = nheaders_aux;
 
     for (i=0; i<nheaders_aux; i++) {
-        sprintf(req_data->headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
-        sprintf(req_data->headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
+        sprintf(rd->headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
+        sprintf(rd->headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
     }
 
     return OK;
 }
 
-void request_data_print(struct http_req_data *req_data) {
-    int i = 0;
-
-    print("HTTP version: %d", req_data->version);
-    print("Method: %s", req_data->method);
-    print("Path: %s", req_data->path);
-    print("\nHeaders:");
-
-    for(i=0; i<req_data->num_headers; i++) {
-        print("%s\t%s", req_data->headers[i].name, req_data->headers[i].value);
-    }
-}
 
 /* wraps phr_parse_request and returns required information in a simple way */
 int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_headers *headers, int *num_headers) {

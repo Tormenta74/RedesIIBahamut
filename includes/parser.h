@@ -17,8 +17,10 @@ typedef struct http_req_data {
     struct http_headers headers[MAX_HEADERS];
 } http_req_data_t;
 
-int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data);
 void request_data_print(struct http_req_data *req_data);
+void request_data_free(struct http_req_data *req_data);
+
+int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data);
 
 int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_headers *headers, int *num_headers);
 int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_headers *headers, int *num_headers);
