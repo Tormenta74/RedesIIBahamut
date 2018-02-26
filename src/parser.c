@@ -19,7 +19,6 @@ int request_parser(char *buf, size_t buflen, char *method, char *path, int *vers
     ret = phr_parse_request(buf, buflen, (const char**)&method_aux, &method_len, (const char**)&path_aux, &path_len, &minor_version, headers_aux, &nheaders_aux, 0);
 
     if (ret <= 0) {
-        print("Error when parsing request. %d\n", ret);
         return ERR;
     }
 
@@ -51,7 +50,6 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
    ret = phr_parse_response(buf, buflen, &minor_version, &status, (const char **) &resp_aux, &resp_len, headers_aux, &nheaders_aux, 0);
 
    if (ret <= 0) {
-      print("Error when parsing response. %d\n", ret);
       return ERR;
    }
 
@@ -89,8 +87,10 @@ int response_builder(char* buffer, int version, int rescode, char *resp, size_t 
    strcat(buf, "\r\n");
 
    /* prints body */
-   sprintf(buf_aux, "%.*s", (int)body_len, body);
-   strcat(buf, buf_aux);
+   if ((int)body_len > 0) {
+      sprintf(buf_aux, "%.*s", (int)body_len, body);
+      strcat(buf, buf_aux);
+   }
 
    /* generates output */
    strcpy(buffer, buf);
