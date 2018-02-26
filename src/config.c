@@ -38,7 +38,8 @@ int config_parse(char* filename, struct server_options *so) {
             continue;
         }
 
-        if(sscanf(line, "%s = %s", option, rest) != 2) {
+        //                     v thanks, stackoverflow!
+        if(sscanf(line, "%s = %[^\t\n]", option, rest) != 2) {
             // bad formatting
             return ERR;
         }
@@ -105,3 +106,5 @@ void config_print(struct server_options *so) {
     print("max_clients: %d", so->max_clients);
     print("listen_port: %d", so->listen_port);
 }
+
+// stackoverflow mention: https://stackoverflow.com/questions/2854488/reading-a-string-with-spaces-with-sscanf#2854510
