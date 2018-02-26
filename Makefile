@@ -82,7 +82,7 @@ $(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # http: http(main) parser
-$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(PARSER).o
+$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(PARSER).o $(BUILDDIR)/$(CONFIG).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
