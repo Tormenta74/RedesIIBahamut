@@ -13,7 +13,7 @@
 
 int main(int argc, char *argv[]) {
 
-    char buf[MAX_CHAR], method[MAX_CHAR], path[MAX_CHAR], resp[MAX_CHAR];
+    char buf[MAX_CHAR], method[MAX_CHAR], path[MAX_CHAR], resp[MAX_CHAR], body[MAX_CHAR];
     int ret, version, i, num_headers, rescode;
     struct http_headers headers[MAX_HEADERS];
 
@@ -37,6 +37,17 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < num_headers; i++) {
         printf("%s: %s\n", headers[i].name, headers[i].value);
     }
+
+    strcpy(body, "Hola mundo.\n");
+
+    ret = response_builder(buf, version, rescode, resp, strlen(resp), num_headers, headers, body, strlen(body));
+
+    if (ret == ERR) {
+        printf("Error.\n");
+        return ERR;
+    }
+
+    printf("\n%s", buf);
 
     return OK;
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>         // malloc
+#include <string.h>         // strcat, strcpy
 
 #include "globals.h"
 #include "parser.h"
@@ -68,4 +69,31 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
 
    return OK;
 
+}
+
+/* builds server responses */
+int response_builder(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_headers *headers, char *body, size_t body_len) {
+   int i;
+   char buf[MAX_CHAR], buf_aux[MAX_CHAR];
+
+   /* prints first line: http version, response code and response message */
+   sprintf(buf, "HTTP/1.%d %d %.*s\r\n", version, rescode, (int) resp_len, resp);
+
+   /* prints headers, pairs {name, value} */
+   for (i=0; i<num_headers; i++) {
+      sprintf(buf_aux, "%s: %s\r\n", headers[i].name, headers[i].value);
+      strcat(buf, buf_aux);
+   }
+
+   /* extra /r/n to indicate end of headers and start of body */
+   strcat(buf, "\r\n");
+
+   /* prints body */
+   sprintf(buf_aux, "%.*s", (int)body_len, body);
+   strcat(buf, buf_aux);
+
+   /* generates output */
+   strcpy(buffer, buf);
+
+   return OK;
 }
