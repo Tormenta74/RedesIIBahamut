@@ -8,7 +8,9 @@
 #include "parser.h"
 #include "picohttpparser.h"
 
-// returns 
+// returns the current date in RFC 1123 format
+// (the char* array is allocated; it's the responsability
+// of the caller to free it)
 char *header_date() {
     time_t rawtime;
     struct tm *timeinfo;
