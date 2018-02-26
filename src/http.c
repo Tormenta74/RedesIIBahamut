@@ -115,7 +115,7 @@ int process_request(char *buf, size_t buflen, char *response) {
 
 int main() {
     int ret;
-    char buf[MAX_CHAR], response[MAX_CHAR];
+    char buf[MAX_CHAR], response[MAX_CHAR], *body;
 
     // config related
 
@@ -143,5 +143,9 @@ int main() {
     printf("\nResponse:\n");
     printf("%s\n", response);
 
+    printf("Test body:\n");
+    sprintf(buf, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nFunny body with testing purposes.\n");
+    ret = get_body_pointer(buf, &body);
+    printf("Message:\n%s\nBody:\n%s\n", buf, body);
     return OK;
 }

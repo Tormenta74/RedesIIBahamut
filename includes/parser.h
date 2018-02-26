@@ -22,6 +22,7 @@ void request_data_free(struct http_req_data *req_data);
 
 int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data);
 
+int get_body_pointer(char *buf, char **body);
 int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_headers *headers, int *num_headers);
 int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_headers *headers, int *num_headers);
 int response_builder(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_headers *headers, char *body, size_t body_len);

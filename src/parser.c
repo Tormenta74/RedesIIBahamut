@@ -61,6 +61,22 @@ void request_data_free(struct http_req_data *rd) {
 /****************************************************************/
 /* PARSING REQUESTS AND RESPONSES */
 
+/* returns pointer to body */
+int get_body_pointer(char *buf, char **body) {
+    char sequence[5], *pointer;
+
+    pointer = buf;
+    do {
+        sprintf(sequence, "%.*s", 4, pointer);
+        pointer++;
+    } while (strcmp(sequence, "\r\n\r\n"));
+    pointer += 3;
+
+    *body = pointer;
+
+    return OK;
+}
+
 /* wraps phr_parse_request and returns required information in a simple way */
 int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
     char *method_aux, *path_aux;
