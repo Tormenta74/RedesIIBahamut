@@ -14,6 +14,7 @@ SRCLIBDIR = srclib
 
 CONFIG = config
 SCRIPT = cgi
+PARSER = parser
 SERVER = server
 DUPER = remap-pipe-fds
 
@@ -30,7 +31,7 @@ HTTPS = http
 
 # core target of the makefile
 
-TARGET = $(TESTCONF)
+TARGET = $(HTTPS)
 
 # cleaning targets
 
@@ -80,8 +81,8 @@ $(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-# http: http(main) config server
-$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(SERVER).o
+# http: http(main) parser
+$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(PARSER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -130,8 +131,6 @@ $(BUILDLIBDIR)/%.o: $(SRCLIBDIR)/%.c
 clean:
 	@echo "Limpiando objetos y ejecutables"
 	@rm -rf ./$(BUILDDIR)/* ./$(CLEAN)
-
-#@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS) ./$(TESTCGI)
 
 clean_libs:
 	@echo "Limpiando librerías"
