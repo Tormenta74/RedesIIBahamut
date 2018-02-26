@@ -20,6 +20,7 @@ DUPER = remap-pipe-fds
 # test main programs
 
 TESTCGI = testcgi
+TESTCONF = testconfig
 
 # main programs
 
@@ -29,7 +30,7 @@ ECHOS = echo
 
 # core target of the makefile
 
-TARGET = $(TESTCGI)
+TARGET = $(TESTCONF)
 
 # library list of modules
 LIBS = libdaemon libconcurrent libtcp picohttpparser
@@ -84,6 +85,10 @@ $(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(SERVER).o
 #
 
 $(TESTCGI): $(BUILDDIR)/$(TESTCGI).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
+	@echo "Enlazando $(notdir $@): $(notdir $^)"
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(TESTCONF): $(BUILDDIR)/$(TESTCONF).o $(BUILDDIR)/$(CONFIG).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
