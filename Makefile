@@ -24,13 +24,18 @@ TESTCONF = testconfig
 
 # main programs
 
+ECHOS = echo
 FILES = file
 HTTPS = http
-ECHOS = echo
 
 # core target of the makefile
 
 TARGET = $(TESTCONF)
+
+# cleaning targets
+
+CLEAN = ./$(TESTCGI) ./$(TESTCONF)
+CLEAN += ./$(ECHOS) ./$(FILES) ./$(HTTPS)
 
 # library list of modules
 LIBS = libdaemon libconcurrent libtcp picohttpparser
@@ -124,7 +129,9 @@ $(BUILDLIBDIR)/%.o: $(SRCLIBDIR)/%.c
 
 clean:
 	@echo "Limpiando objetos y ejecutables"
-	@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS) ./$(TESTCGI)
+	@rm -rf ./$(BUILDDIR)/* ./$(CLEAN)
+
+#@rm -rf ./$(BUILDDIR)/* ./$(TARGET) ./$(ECHOS) ./$(FILES) ./$(HTTPS) ./$(TESTCGI)
 
 clean_libs:
 	@echo "Limpiando librerías"
