@@ -33,6 +33,7 @@ int config_parse(char* filename, struct server_options *so) {
             continue;
         }
 
+        // line starts empty
         if(line[0] == '\n'
                 || (line[0] == '\r' && line[1] == '\n')) {
             continue;

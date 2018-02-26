@@ -8,8 +8,8 @@
 int main(int argc, char *argv[]) {
     int status;
     struct server_options so;
-    
-    status = config_parse("testserver.conf", &so);
+
+    status = config_parse("server.conf", &so);
     if(status == ERR) {
         printf("Parsing failed.\n");
         exit(ERR);
