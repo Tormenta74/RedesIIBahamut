@@ -18,7 +18,7 @@ struct server_options so;
 int process_request(char *buf, size_t buflen, char *response) {
     char *date_buf;
     int ret;
-    struct http_headers res_headers[MAX_HEADERS];
+    struct http_pairs res_headers[MAX_HEADERS];
     struct http_req_data rd;
 
     ret = request_parser_new(buf, buflen, &rd);
@@ -66,7 +66,7 @@ int process_request(char *buf, size_t buflen, char *response) {
 //
 //    char buf[MAX_CHAR], method[MAX_CHAR], path[MAX_CHAR], resp[MAX_CHAR], body[MAX_CHAR], response[MAX_CHAR];
 //    int ret, version, i, num_headers, rescode;
-//    struct http_headers headers[MAX_HEADERS];
+//    struct http_pairs headers[MAX_HEADERS];
 //
 //    //sprintf(buf, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\n");
 //    //ret = request_parser(buf, strlen(buf), method, path, &version, headers, &num_headers);
@@ -114,8 +114,9 @@ int process_request(char *buf, size_t buflen, char *response) {
 //}
 
 int main() {
-    int ret;
-    char buf[MAX_CHAR], response[MAX_CHAR], *body;
+    int ret, i, num_pairs;
+    char buf[MAX_CHAR], response[MAX_CHAR], *body, test[MAX_CHAR]="nombre=diego&apellido=sainz&curso=tercero";
+    struct http_pairs pairs[10];
 
     // config related
 
@@ -143,9 +144,23 @@ int main() {
     printf("\nResponse:\n");
     printf("%s\n", response);
 
-    printf("Test body:\n");
-    sprintf(buf, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nFunny body with testing purposes.\n");
-    ret = get_body_pointer(buf, &body);
-    printf("Message:\n%s\nBody:\n%s\n", buf, body);
+    /* Test get_body_pointer */
+    // printf("Test body:\n");
+    // sprintf(buf, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nFunny body with testing purposes.\n");
+    // ret = get_body_pointer(buf, &body);
+    // printf("Message:\n%s\nBody:\n%s\n", buf, body);
+
+    /* Test argument_parser */
+    // ret = argument_parser(test, pairs, 10, &num_pairs);
+    // if (ret == ERR) {
+    //     printf("Argument parser failure ja.\n");
+    //     return ERR;
+    // }
+    //
+    // printf("Pairs:\n");
+    // for (i=0; i<num_pairs; i++) {
+    //     printf("%s: %s\n", pairs[i].name, pairs[i].value);
+    // }
+
     return OK;
 }

@@ -61,6 +61,62 @@ void request_data_free(struct http_req_data *rd) {
 /****************************************************************/
 /* PARSING REQUESTS AND RESPONSES */
 
+/* arguments parser for GET and POST */
+int argument_parser(char *buf, struct http_pairs *args, int max_pairs, int *num_pairs) {
+    char *aux;
+    int counter=0, index=0;
+
+    if (buf == NULL || args == NULL) {
+        print("Argument parsing failure.\n");
+        return ERR;
+    }
+
+    // checks if we have exceeded the maximum number of arguments
+    aux = buf;
+    while(*aux != '\0') {
+        if(*aux == '&') {
+            counter++;
+        }
+        aux++;
+    }
+
+    // exits if we have exceeded the maximum number of arguments, sets num_pairs otherwise
+    if (counter >= max_pairs) {
+        print("Too many arguments. Argument parsing failure.\n");
+        return ERR;
+    }
+    *num_pairs = counter+1;
+
+    aux = buf;
+    counter = 0;
+    while(1) {
+        if((*aux != '=') && (*aux != '&') && (*aux != '\0')) {
+            // increases the counter for each character of the word
+            counter++;
+        } else if(*aux == '=') {
+            // when finding '=', the first member of {tag, value} has been explored
+            sprintf(args[index].name, "%.*s", counter, buf);
+            buf += counter + 1;
+            counter = 0;
+        } else {
+            // when finding '&' or '\0', the second member of {tag, value} has been explored
+            sprintf(args[index].value, "%.*s", counter, buf);
+            buf += counter + 1;
+            counter = 0;
+            index++;
+        }
+        // when finding '\0' we have finished exploring the original buffer
+        if (*aux == '\0') {
+            break;
+        }
+        // continues to the next character
+        aux++;
+    }
+
+    return OK;
+
+}
+
 /* returns pointer to body */
 int get_body_pointer(char *buf, char **body) {
     char sequence[5], *pointer;
@@ -115,7 +171,7 @@ int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
     rd->num_headers = nheaders_aux;
 
     /*                                                       */
-    /* fills http_headers structure with pairs {name, value} */
+    /* fills http_pairs structure with pairs {name, value} */
     /*                                                       */
 
     rd->num_headers = nheaders_aux;
@@ -130,7 +186,7 @@ int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
 
 
 /* wraps phr_parse_request and returns required information in a simple way */
-int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_headers *headers, int *num_headers) {
+int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_pairs *headers, int *num_headers) {
     char *method_aux, *path_aux;
     size_t method_len, path_len, nheaders_aux;
     struct phr_header headers_aux[MAX_HEADERS];
@@ -151,7 +207,7 @@ int request_parser(char *buf, size_t buflen, char *method, char *path, int *vers
     *version = minor_version;
     *num_headers = (int) nheaders_aux;
 
-    /* fills http_headers structure with pairs {name, value} */
+    /* fills http_pairs structure with pairs {name, value} */
     for(i=0; i<nheaders_aux; i++) {
         sprintf(headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
         sprintf(headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
@@ -161,7 +217,7 @@ int request_parser(char *buf, size_t buflen, char *method, char *path, int *vers
 }
 
 /* wraps phr_parse_response and returns required information in a simple way */
-int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_headers *headers, int *num_headers) {
+int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers) {
     char *resp_aux;
     size_t resp_len, nheaders_aux;
     struct phr_header headers_aux[MAX_HEADERS];
@@ -182,7 +238,7 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
     *rescode = status;
     *num_headers = (int) nheaders_aux;
 
-    /* fills http_headers structure with pairs {name, value} */
+    /* fills http_pairs structure with pairs {name, value} */
     for(i=0; i<nheaders_aux; i++) {
         sprintf(headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
         sprintf(headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
@@ -193,7 +249,7 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
 }
 
 /* builds server responses */
-int response_builder(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_headers *headers, char *body, size_t body_len) {
+int response_builder(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len) {
     int i;
     char buf[MAX_CHAR], buf_aux[MAX_CHAR];
 
