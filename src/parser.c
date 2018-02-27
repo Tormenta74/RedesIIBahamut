@@ -61,12 +61,12 @@ void request_data_free(struct http_req_data *rd) {
 /****************************************************************/
 /* PARSING REQUESTS AND RESPONSES */
 
-/* arguments parser for GET and POST */
-int argument_parser(char *buf, struct http_pairs *args, int max_pairs, int *num_pairs) {
+/* parses arguments from string "key1=value1&key2=value2&..." */
+int argument_parser(char *buf, struct http_args_data *arguments) {
     char *aux;
     int counter=0, index=0;
 
-    if (buf == NULL || args == NULL) {
+    if (buf == NULL || arguments == NULL) {
         print("Argument parsing failure.\n");
         return ERR;
     }
@@ -81,11 +81,11 @@ int argument_parser(char *buf, struct http_pairs *args, int max_pairs, int *num_
     }
 
     // exits if we have exceeded the maximum number of arguments, sets num_pairs otherwise
-    if (counter >= max_pairs) {
+    if (counter >= MAX_ARGS) {
         print("Too many arguments. Argument parsing failure.\n");
         return ERR;
     }
-    *num_pairs = counter+1;
+    arguments->num_pairs = counter+1;
 
     aux = buf;
     counter = 0;
@@ -94,13 +94,13 @@ int argument_parser(char *buf, struct http_pairs *args, int max_pairs, int *num_
             // increases the counter for each character of the word
             counter++;
         } else if(*aux == '=') {
-            // when finding '=', the first member of {tag, value} has been explored
-            sprintf(args[index].name, "%.*s", counter, buf);
+            // when finding '=', the first member of {key, value} has been explored
+            sprintf(arguments->args[index].name, "%.*s", counter, buf);
             buf += counter + 1;
             counter = 0;
         } else {
-            // when finding '&' or '\0', the second member of {tag, value} has been explored
-            sprintf(args[index].value, "%.*s", counter, buf);
+            // when finding '&' or '\0', the second member of {key, value} has been explored
+            sprintf(arguments->args[index].value, "%.*s", counter, buf);
             buf += counter + 1;
             counter = 0;
             index++;
@@ -111,6 +111,42 @@ int argument_parser(char *buf, struct http_pairs *args, int max_pairs, int *num_
         }
         // continues to the next character
         aux++;
+    }
+
+    return OK;
+
+}
+
+/* arguments parser for GET and POST */
+int request_argument_parser(char *method, char *buffer, struct http_args_data *args) {
+    int ret;
+    char *aux;
+
+    if (method == NULL || buffer == NULL || args == NULL) {
+        print("Request arguments parsing failure.\n");
+        return ERR;
+    }
+
+    // checks if method is actually "GET" or "POST"
+    if ((ret = strcmp(method, "GET")) && strcmp(method, "POST")) {
+        print("Request method when parsing arguments failure.\n");
+        return ERR;
+    }
+
+    // if method is "GET", takes the substring after the '?' in the url (the buffer needs to be the path)
+    // if method is "POST", takes the whole buffer (the buffer needs to be the body)
+    aux = strdup(buffer);
+    if (!ret) {
+        while (*aux != '?') {
+            aux++;
+        }
+        aux++;
+    }
+
+    ret = argument_parser(aux, args);
+    if (ret == ERR) {
+        print("Argument parser failure, as you have seen.\n");
+        return ERR;
     }
 
     return OK;

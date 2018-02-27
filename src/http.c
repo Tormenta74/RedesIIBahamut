@@ -115,8 +115,10 @@ int process_request(char *buf, size_t buflen, char *response) {
 
 int main() {
     int ret, i, num_pairs;
-    char buf[MAX_CHAR], response[MAX_CHAR], *body, test[MAX_CHAR]="nombre=diego&apellido=sainz&curso=tercero";
-    struct http_pairs pairs[10];
+    char buf[MAX_CHAR], response[MAX_CHAR];
+    // char *body;
+    // char test1[MAX_CHAR]="nombre=diego&apellido=sainz&curso=quinto", test2[MAX_CHAR]="urlrandom.rand?nombre=fernando&apellido=villar&curso=tercero";
+    // struct http_args_data args_data1, args_data2;
 
     // config related
 
@@ -151,15 +153,26 @@ int main() {
     // printf("Message:\n%s\nBody:\n%s\n", buf, body);
 
     /* Test argument_parser */
-    // ret = argument_parser(test, pairs, 10, &num_pairs);
+    // ret = request_argument_parser("POST", test1, &args_data1);
     // if (ret == ERR) {
-    //     printf("Argument parser failure ja.\n");
+    //     printf("Argument parser failure 1.\n");
     //     return ERR;
     // }
     //
     // printf("Pairs:\n");
-    // for (i=0; i<num_pairs; i++) {
-    //     printf("%s: %s\n", pairs[i].name, pairs[i].value);
+    // for (i=0; i<args_data1.num_pairs; i++) {
+    //     printf("%s: %s\n", args_data1.args[i].name, args_data1.args[i].value);
+    // }
+    //
+    // ret = request_argument_parser("GET", test2, &args_data2);
+    // if (ret == ERR) {
+    //     printf("Argument parser failure 2.\n");
+    //     return ERR;
+    // }
+    //
+    // printf("\n");
+    // for (i=0; i<args_data2.num_pairs; i++) {
+    //     printf("%s: %s\n", args_data2.args[i].name, args_data2.args[i].value);
     // }
 
     return OK;
