@@ -442,9 +442,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
         return ERR
     }
 
-
     // no match at all
     print("Resource does not match any of the supported scripts.");
-    *check_flag = 0;
     return file_len;
 }
