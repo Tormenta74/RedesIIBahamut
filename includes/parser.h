@@ -20,7 +20,7 @@ typedef struct http_req_data {
 
 typedef struct http_args_data {
     int num_pairs;
-    struct http_pairs args[MAX_HEADERS];
+    struct http_pairs args[MAX_ARGS];
 } http_args_data_t;
 
 void request_data_print(struct http_req_data *req_data);
