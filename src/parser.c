@@ -69,7 +69,8 @@ int get_body_pointer(char *buf, char **body) {
     do {
         sprintf(sequence, "%.*s", 4, pointer);
         pointer++;
-    } while (strcmp(sequence, "\r\n\r\n"));
+    } while(strcmp(sequence, "\r\n\r\n"));
+
     pointer += 3;
 
     *body = pointer;
@@ -89,7 +90,7 @@ int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
 
     ret = phr_parse_request(buf, buflen, (const char**)&method_aux, &method_len, (const char**)&path_aux, &path_len, &minor_version, headers_aux, &nheaders_aux, 0);
 
-    if (ret <= 0) {
+    if(ret <= 0) {
         print("phr_parse_request failure.");
         return ERR;
     }
@@ -119,7 +120,7 @@ int request_parser_new(char *buf, size_t buflen, struct http_req_data *rd) {
 
     rd->num_headers = nheaders_aux;
 
-    for (i=0; i<nheaders_aux; i++) {
+    for(i=0; i<nheaders_aux; i++) {
         sprintf(rd->headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
         sprintf(rd->headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
     }
@@ -140,7 +141,7 @@ int request_parser(char *buf, size_t buflen, char *method, char *path, int *vers
 
     ret = phr_parse_request(buf, buflen, (const char**)&method_aux, &method_len, (const char**)&path_aux, &path_len, &minor_version, headers_aux, &nheaders_aux, 0);
 
-    if (ret <= 0) {
+    if(ret <= 0) {
         return ERR;
     }
 
@@ -151,7 +152,7 @@ int request_parser(char *buf, size_t buflen, char *method, char *path, int *vers
     *num_headers = (int) nheaders_aux;
 
     /* fills http_headers structure with pairs {name, value} */
-    for (i=0; i<nheaders_aux; i++) {
+    for(i=0; i<nheaders_aux; i++) {
         sprintf(headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
         sprintf(headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
     }
@@ -171,7 +172,7 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
 
     ret = phr_parse_response(buf, buflen, &minor_version, &status, (const char **) &resp_aux, &resp_len, headers_aux, &nheaders_aux, 0);
 
-    if (ret <= 0) {
+    if(ret <= 0) {
         return ERR;
     }
 
@@ -182,7 +183,7 @@ int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *
     *num_headers = (int) nheaders_aux;
 
     /* fills http_headers structure with pairs {name, value} */
-    for (i=0; i<nheaders_aux; i++) {
+    for(i=0; i<nheaders_aux; i++) {
         sprintf(headers[i].name, "%.*s", (int)headers_aux[i].name_len, headers_aux[i].name);
         sprintf(headers[i].value, "%.*s", (int)headers_aux[i].value_len, headers_aux[i].value);
     }
@@ -200,7 +201,7 @@ int response_builder(char* buffer, int version, int rescode, char *resp, size_t 
     sprintf(buf, "HTTP/1.%d %d %.*s\r\n", version, rescode, (int) resp_len, resp);
 
     /* prints headers, pairs {name, value} */
-    for (i=0; i<num_headers; i++) {
+    for(i=0; i<num_headers; i++) {
         sprintf(buf_aux, "%s: %s\r\n", headers[i].name, headers[i].value);
         strcat(buf, buf_aux);
     }
@@ -209,7 +210,7 @@ int response_builder(char* buffer, int version, int rescode, char *resp, size_t 
     strcat(buf, "\r\n");
 
     /* prints body */
-    if ((int)body_len > 0) {
+    if((int)body_len > 0) {
         sprintf(buf_aux, "%.*s", (int)body_len, body);
         strcat(buf, buf_aux);
     }

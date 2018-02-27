@@ -18,8 +18,10 @@
 #define CHILD_READ      writepipe[R]
 #define PARENT_WRITE	writepipe[W]
 
-int fork_exec(const char *program, const char *resource, const char *input, int len, char **output) {
-    int status = ERR, nread = 0, output_size = 0;
+// returns ERR upon failure to execute and the lenght of the output otherwise
+int cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output) {
+    int status = ERR, nread = 0;
+    long output_size = 0;
     int writepipe[2], readpipe[2];
     pid_t pid;
     char buffer[MAX_SCRIPT_LINE_OUTPUT], aux[MAX_SCRIPT_LINE_OUTPUT];
@@ -63,7 +65,7 @@ int fork_exec(const char *program, const char *resource, const char *input, int 
 
         // if we got here, we fucked up
 
-        return ERR;
+        exit(ERR);
 
     } else {
         //
@@ -75,13 +77,9 @@ int fork_exec(const char *program, const char *resource, const char *input, int 
         close(CHILD_READ);
         close(CHILD_WRITE);
 
-        // give my son some time
-
-        //sleep(1000);
-
         // tell him what it's all about
 
-        write(PARENT_WRITE, input, len);
+        write(PARENT_WRITE, input, inlen);
         close(PARENT_WRITE);
 
         // hear what it has to say
@@ -106,68 +104,7 @@ int fork_exec(const char *program, const char *resource, const char *input, int 
 
         *output = strndup(aux, output_size);
 
-        return OK;
+        return output_size;
     }
-}
-
-regex_t py, php;
-
-int cgi_module_setup() {
-    int status;
-
-    status = regcomp(&py, "^.*\\.py$", 0);
-    if(status) {
-        print("Could not compile the Python extension regex.");
-        return ERR;
-    }
-
-    status = regcomp(&php, "^.*\\.php$", 0);
-    if(status) {
-        print("Could not compile the PHP extension regex.");
-        regfree(&py);
-        return ERR;
-    }
-
-    return OK;
-}
-
-void cgi_module_clean() {
-    regfree(&py);
-    regfree(&php);
-}
-
-int cgi_exec_script(const char *resource, const char *input, int inlen, char **output) {
-    int status;
-    char errbuf[128];
-
-    if(!resource || !input) {
-        return ERR;
-    }
-
-    status = regexec(&py, resource, 0, NULL, 0);
-    if(!status) {
-        // match! launch python interpreter
-        fork_exec("python", resource, input, inlen, output);
-        return OK;
-    } else if(status != REG_NOMATCH) {
-        regerror(status, &py, errbuf, 128);
-        print("Regex (.py extension) match failed: %s", errbuf);
-        return ERR;
-    }
-
-    status = regexec(&php, resource, 0, NULL, 0);
-    if(!status) {
-        // match! launch php interpreter
-        fork_exec("php", resource, input, inlen, output);
-        return OK;
-    } else if(status != REG_NOMATCH) {
-        regerror(status, &php, errbuf, 128);
-        print("Regex (.php extension) match failed: %s", errbuf);
-        return ERR;
-    }
-
-    // no match at all
-    print("Resource does not match any of the supported scripts.");
-    return NO_MATCH;
 }
 
