@@ -5,7 +5,6 @@
 
 #include "globals.h"
 #include "headers.h"
-#include "parser.h"
 #include "picohttpparser.h"
 
 
