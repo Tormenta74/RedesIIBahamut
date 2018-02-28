@@ -4,7 +4,6 @@
 #include <time.h>
 
 #include "globals.h"
-#include "headers.h"
 #include "picohttpparser.h"
 #include "http.h"
 

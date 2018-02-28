@@ -8,6 +8,7 @@
 #include "globals.h"
 #include "headers.h"
 #include "config.h"
+#include "http.h"
 
 char *date_generator(time_t *t) {
     time_t rawtime;
@@ -58,4 +59,47 @@ char *header_last_modified(char *path) {
     }
 
     return date_generator(&sb.st_mtime);
+}
+
+int header_build(struct server_options so, char *path, char *contenttype, long len, int check_flag, int options_flag, struct http_pairs *headers, int *num_headers) {
+    char *date_buf, *server_buf, *lm_buf;
+
+    if (num_headers == NULL || headers == NULL) {
+        return ERR;
+    }
+
+    date_buf = header_date();
+    server_buf = header_server(so);
+
+    sprintf(headers[0].name, "Date");
+    sprintf(headers[0].value, date_buf);
+    sprintf(headers[1].name, "Server");
+    sprintf(headers[1].value, server_buf);
+
+    *num_headers = 2;
+
+    if (options_flag == 1) {
+        sprintf(headers[2].name, "Allow");
+        sprintf(headers[2].value, "OPTIONS, GET, POST");
+        *num_headers = 3;
+    }
+
+    if (check_flag == 1) {
+        lm_buf = header_last_modified(path);
+
+        if (lm_buf == NULL) {
+            return ERR;
+        }
+
+        sprintf(headers[2].name, "Content-Type");
+        sprintf(headers[2].value, contenttype);
+        sprintf(headers[3].name, "Content-Length");
+        sprintf(headers[3].value, "%d", len);
+        sprintf(headers[4].name, "Last-Modified");
+        sprintf(headers[4].value, lm_buf);
+
+        *num_headers = 5;
+    }
+
+    return OK;
 }

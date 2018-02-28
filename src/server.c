@@ -17,7 +17,7 @@ struct server_options so;
 
 int process_request(char *buf, size_t buflen, char *response) {
     char *date_buf, *server_buf;
-    int ret;
+    int ret, num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
     struct http_req_data rd;
 
@@ -41,15 +41,14 @@ int process_request(char *buf, size_t buflen, char *response) {
 
     // OPTIONS
     if(strcmp(rd.method, "OPTIONS") == 0) {
-        sprintf(res_headers[0].name, "Allow");
-        sprintf(res_headers[0].value, "OPTIONS, GET, POST");
-        sprintf(res_headers[1].name, "Date");
-        sprintf(res_headers[1].value, date_buf);
-        sprintf(res_headers[2].name, "Server");
-        sprintf(res_headers[2].value, server_buf);
+        ret = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
+        if(ret == ERR) {
+            print("Error while creating headers for OPTIONS response.");
+            free(date_buf);
+            return ERR;
+        }
 
-        ret = http_response_build(response, rd.version, 200, "OK", 2, 3, res_headers, NULL, 0);
-
+        ret = http_response_build(response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
         if(ret == ERR) {
             print("Error while creating OPTIONS response.");
             free(date_buf);
