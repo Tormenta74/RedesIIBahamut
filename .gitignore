@@ -3,7 +3,11 @@ lib/
 .vscode/
 
 *.o
+*.out
 
 echo
 file
 server
+testcgi
+testconfig
+testscripts
