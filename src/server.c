@@ -16,7 +16,7 @@
 struct server_options so;
 
 int process_request(char *buf, size_t buflen, char *response) {
-    char *date_buf;
+    char *date_buf, *server_buf;
     int ret;
     struct http_pairs res_headers[MAX_HEADERS];
     struct http_req_data rd;
@@ -31,6 +31,7 @@ int process_request(char *buf, size_t buflen, char *response) {
     }
 
     date_buf = header_date();
+    server_buf = header_server(so);
 
     // GET
     //if(strcmp(method, "GET") == 0) {
@@ -45,7 +46,7 @@ int process_request(char *buf, size_t buflen, char *response) {
         sprintf(res_headers[1].name, "Date");
         sprintf(res_headers[1].value, date_buf);
         sprintf(res_headers[2].name, "Server");
-        sprintf(res_headers[2].value, so.server_signature);
+        sprintf(res_headers[2].value, server_buf);
 
         ret = http_response_build(response, rd.version, 200, "OK", 2, 3, res_headers, NULL, 0);
 
@@ -64,7 +65,8 @@ int process_request(char *buf, size_t buflen, char *response) {
 
 int main() {
     int ret;
-    char buf[MAX_CHAR], response[MAX_CHAR];
+    char buf[MAX_CHAR], buf2[MAX_CHAR], response[MAX_CHAR];
+    struct http_req_data rd;
 
     // config related
 
@@ -77,19 +79,27 @@ int main() {
     // http parsing related
 
     // change your request here
-    //sprintf(buf, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\n");
-    sprintf(buf, "OPTIONS /somedir/page.html HTTP/1.1\r\n\r\n");
+    sprintf(buf2, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\n");
+    //sprintf(buf, "OPTIONS /somedir/page.html HTTP/1.1\r\n\r\n");
 
     // change the number directly for now: strlen is not reliable
-    ret = process_request(buf, 44, response);
+    // ret = process_request(buf, 44, response);
+    //
+    // if(ret == ERR) {
+    //     printf("Parsing failed.\n");
+    //     return ERR;
+    // }
+    //
+    // printf("\nResponse:\n");
+    // printf("%s\n", response);
 
-    if(ret == ERR) {
-        printf("Parsing failed.\n");
+    ret = http_request_parse(buf2, strlen(buf2), &rd);
+    if (ret == ERR) {
+        printf("Request failed.\n");
         return ERR;
     }
 
-    printf("\nResponse:\n");
-    printf("%s\n", response);
+    http_request_data_print(&rd);
 
     return OK;
 }

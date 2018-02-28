@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "headers.h"
 #include "picohttpparser.h"
+#include "http.h"
 
 
 /****************************************************************
@@ -23,6 +24,12 @@ void http_request_data_print(struct http_req_data *rd) {
     for(i=0; i<rd->num_headers; i++) {
         print("%s\t%s", rd->headers[i].name, rd->headers[i].value);
     }
+
+    if(rd->body) {
+        print("Body: %s", rd->body);
+    } else {
+        print("Body: empty");
+    }
 }
 
 void http_request_data_free(struct http_req_data *rd) {
@@ -32,6 +39,9 @@ void http_request_data_free(struct http_req_data *rd) {
     if(rd->path) {
         free(rd->path);
     }
+    if(rd->body) {
+        free(rd->body);
+    }
 }
 
 /****************************************************************
@@ -39,9 +49,15 @@ void http_request_data_free(struct http_req_data *rd) {
  */
 
 
-/* returns pointer to body */
+/* function to set body pointer, argument 'buf' must contain the string
+ * "\r\n\r\n" to work properly. Sets NULL if there is no body.
+ */
 int http_response_body(char *buf, char **body) {
     char sequence[5], *pointer;
+
+    if (buf == NULL || body == NULL) {
+        return ERR;
+    }
 
     pointer = buf;
     do {
@@ -51,15 +67,19 @@ int http_response_body(char *buf, char **body) {
 
     pointer += 3;
 
-    *body = pointer;
+    if (strcmp(pointer, "\0")) {
+        *body = pointer;
+    } else {
+        *body = NULL;
+    }
 
     return OK;
 }
 
 /* wraps phr_parse_request and returns required information in a simple way */
 int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
-    char *method_aux, *path_aux;
-    size_t method_len, path_len, nheaders_aux;
+    char *method_aux, *path_aux, *body_aux;
+    size_t method_len, path_len, body_len, nheaders_aux;
     struct phr_header headers_aux[MAX_HEADERS];
     int ret, minor_version, i;
 
@@ -88,6 +108,23 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
         return ERR;
     }
     sprintf(rd->path, "%.*s", (int)path_len, path_aux);
+
+    ret = http_response_body(buf, &body_aux);
+    if(ret == ERR) {
+        print("http_response_body failure.\n");
+        return ERR;
+    }
+    if (body_aux == NULL) {
+        rd->body = NULL;
+    } else {
+        body_len = buflen - (body_aux - buf);
+        rd->body = (char*)malloc(body_len*sizeof(char));
+        if(!rd->body) {
+            print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
+            return ERR;
+        }
+        sprintf(rd->body, "%.*s", (int)body_len, body_aux);
+    }
 
     rd->version = minor_version;
     rd->num_headers = nheaders_aux;

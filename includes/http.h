@@ -14,10 +14,12 @@ typedef struct http_req_data {
     int version;
     char *method;
     char *path;
+    char *body;
     int num_headers;
     struct http_pairs headers[MAX_HEADERS];
 } http_req_data_t;
 
+// depr
 typedef struct http_args_data {
     int num_pairs;
     struct http_pairs args[MAX_ARGS];

@@ -7,6 +7,7 @@
 
 #include "globals.h"
 #include "headers.h"
+#include "config.h"
 
 char *date_generator(time_t *t) {
     time_t rawtime;
@@ -41,4 +42,8 @@ char *date_generator(time_t *t) {
 // of the caller to free it)
 char *header_date() {
     return date_generator(NULL);
+}
+
+char *header_server(struct server_options so) {
+    return so.server_signature;
 }
