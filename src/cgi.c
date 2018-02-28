@@ -18,8 +18,21 @@
 #define CHILD_READ      writepipe[R]
 #define PARENT_WRITE	writepipe[W]
 
-// returns ERR upon failure to execute and the lenght of the output otherwise
-int cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output) {
+/*
+ * Description: Executes in a child process the "program" interpreter with the "resource" script, 
+ *              providing "input" of length "inlen" through the child's redirected stdi/o. It's
+ *              the responsability of the caller to free the memory reserved for "output".
+ *
+ * In:
+ * const char *program: name of the interpreter (shell name, e.g. "python", not "/usr/bin/python")
+ * const char *resource: path to the desired script to be interpreted
+ * const char *input: the string which the script is to receive via its standard input
+ * int inlen: length of the input
+ * char **output: pointer to the memory zone where to write the output of the script
+ *
+ * Return: ERR in case of failure at any point. Size of the output string otherwise.
+ * */
+long cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output) {
     int status = ERR, nread = 0;
     long output_size = 0;
     int writepipe[2], readpipe[2];
@@ -32,27 +45,27 @@ int cgi_exec_script(const char *program, const char *resource, const char *input
 
     status = pipe(writepipe);
     if(status) {
-        printf("pipe failed yo\n");
+        print("pipe failed.");
         return ERR;
     }
 
     status = pipe(readpipe);
     if(status) {
-        printf("pipe failed yo\n");
+        print("pipe failed.");
         return ERR;
     }
 
     //
-    // fork this shit
+    // fork this
     //
 
     pid = fork();
 
-    //
-    // am child, yo
-    //
-
     if(pid == 0) {
+
+        //
+        // am child, yo
+        //
 
         // close them not wanted pipes
 
@@ -63,11 +76,12 @@ int cgi_exec_script(const char *program, const char *resource, const char *input
 
         execlp(program, program, resource, (char*)NULL);
 
-        // if we got here, we fucked up
+        // if we got here, we f***** up
 
         exit(ERR);
 
     } else {
+
         //
         // am parent here aight
         //

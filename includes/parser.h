@@ -23,16 +23,19 @@ typedef struct http_args_data {
     struct http_pairs args[MAX_ARGS];
 } http_args_data_t;
 
-void request_data_print(struct http_req_data *req_data);
-void request_data_free(struct http_req_data *req_data);
+void http_request_data_print(struct http_req_data *req_data);
+void http_request_data_free(struct http_req_data *req_data);
 
-int request_parser_new(char *buf, size_t buflen, struct http_req_data *req_data);
+int http_request_parse(char *buf, size_t buflen, struct http_req_data *req_data);
 
+int http_request_body(char *buf, char **body);
+int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len);
+
+// not used
+int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers);
 int argument_parser(char *buf, struct http_args_data *arguments);
 int request_argument_parser(char *method, char *buffer, struct http_args_data *args);
-int get_body_pointer(char *buf, char **body);
-int request_parser(char *buf, size_t buflen, char *method, char *path, int *version, struct http_pairs *headers, int *num_headers);
-int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers);
-int response_builder(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len);
+// depr
+int http_request_parse_old(char *buf, size_t buflen, char *method, char *path, int *version, struct http_pairs *headers, int *num_headers);
 
 #endif

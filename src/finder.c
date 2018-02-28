@@ -319,7 +319,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &html, errbuf, 128);
         print("Regex (.html extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&htm, resource, 0, NULL, 0);
@@ -331,7 +331,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &htm, errbuf, 128);
         print("Regex (.htm extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&gif, resource, 0, NULL, 0);
@@ -343,7 +343,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &gif, errbuf, 128);
         print("Regex (.gif extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&png, resource, 0, NULL, 0);
@@ -355,7 +355,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &png, errbuf, 128);
         print("Regex (.png extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&jpeg, resource, 0, NULL, 0);
@@ -367,7 +367,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &jpeg, errbuf, 128);
         print("Regex (.jpeg extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&jpg, resource, 0, NULL, 0);
@@ -379,7 +379,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &jpg, errbuf, 128);
         print("Regex (.jpg extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&mpeg, resource, 0, NULL, 0);
@@ -391,7 +391,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &mpeg, errbuf, 128);
         print("Regex (.mpeg extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&mpg, resource, 0, NULL, 0);
@@ -403,7 +403,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &mpg, errbuf, 128);
         print("Regex (.mpg extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&docx, resource, 0, NULL, 0);
@@ -415,7 +415,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &docx, errbuf, 128);
         print("Regex (.docx extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&doc, resource, 0, NULL, 0);
@@ -427,7 +427,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &doc, errbuf, 128);
         print("Regex (.doc extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     status = regexec(&pdf, resource, 0, NULL, 0);
@@ -439,7 +439,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     } else if(status != REG_NOMATCH) {
         regerror(status, &pdf, errbuf, 128);
         print("Regex (.pdf extension) match failed: %s", errbuf);
-        return ERR
+        return ERR;
     }
 
     // no match at all

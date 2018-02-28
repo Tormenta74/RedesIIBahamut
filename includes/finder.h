@@ -6,6 +6,6 @@
 
 int finder_setup();
 void finder_clean();
-long finder_load(const char *resource, const char *input, int inlen, char **output, char **contenttype);
+long finder_load(const char *resource, const char *input, int inlen, char **output, char **contenttype, int *check_flag);
 
 #endif /*_FINDER_H*/

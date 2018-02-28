@@ -6,6 +6,25 @@
 #include "globals.h"
 #include "config.h"
 
+/*
+ * Description: Opens and reads a configuration file with a format as follows. Note that empty lines
+ *              are valid as long as they don't contain spaces, and there must be exactly one space
+ *              before and after the "=".
+ *
+ * server.conf:
+ *   # lines starting with # are comments
+ *
+ *   key = value
+ *
+ * In:
+ * char *filename: path to the configuration file
+ * const char *resource: path to the desired script to be interpreted
+ * const char *input: the string which the script is to receive via its standard input
+ * int inlen: length of the input
+ * char **output: pointer to the memory zone where to write the output of the script
+ *
+ * Return: ERR in case of failure at any point. Size of the output string otherwise.
+ * */
 int config_parse(char* filename, struct server_options *so) {
     size_t len;
     ssize_t read;
