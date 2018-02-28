@@ -8,31 +8,6 @@
 #include "parser.h"
 #include "picohttpparser.h"
 
-/****************************************************************
- * HEADER CONSTRUCTIONS
- */
-
-// returns the current date in RFC 1123 format
-// (the char* array is allocated; it's the responsability
-// of the caller to free it)
-char *header_date() {
-    time_t rawtime;
-    struct tm *timeinfo;
-    size_t nformatted;
-    char buffer[128], *date_buf;
-
-    time(&rawtime);
-    timeinfo = gmtime(&rawtime);
-
-    nformatted = strftime(buffer, 128, "%a, %d %b %Y %T %Z", timeinfo);
-    if(nformatted == 0) {
-        return NULL;
-    }
-
-    date_buf = strndup(buffer, nformatted);
-
-    return date_buf;
-}
 
 /****************************************************************
  * DATA STRUCTURES UTILS

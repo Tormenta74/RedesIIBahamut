@@ -16,6 +16,7 @@ CONFIG = config
 SCRIPT = cgi
 DUPER = remap-pipe-fds
 FINDER = finder
+HEADERS = headers
 HTTP = http
 
 # test main programs
@@ -82,7 +83,7 @@ $(FILES): $(BUILDDIR)/$(FILES).o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # http: http(main) parser
-$(SERVER): $(BUILDDIR)/$(SERVER).o $(BUILDDIR)/$(HTTP).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(FINDER).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
+$(SERVER): $(BUILDDIR)/$(SERVER).o $(BUILDDIR)/$(HTTP).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(FINDER).o $(BUILDDIR)/$(HEADERS).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 

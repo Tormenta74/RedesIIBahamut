@@ -32,6 +32,10 @@ char *date_generator(time_t *t) {
     return date_buf;
 }
 
+/****************************************************************
+ * HEADER CONSTRUCTIONS
+ */
+
 // returns the current date in RFC 1123 format
 // (the char* array is allocated; it's the responsability
 // of the caller to free it)
