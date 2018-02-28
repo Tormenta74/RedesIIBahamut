@@ -7,7 +7,7 @@
 
 #include "globals.h"
 #include "cgi.h"
-#include "remap-pipe-fds.h"
+//#include "remap-pipe-fds.h"
 
 int main(int argc, char *argv[]) {
     int status;

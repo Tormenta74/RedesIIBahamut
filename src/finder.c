@@ -228,7 +228,6 @@ int fill_content_type(const char *type, char **contenttype) {
     }
 
     sprintf(*contenttype, "%s", type);
-    *contenttype[strlen(type)] = '\0';
 
     return OK;
 }
@@ -255,7 +254,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
         return ERR;
     }
 
-    *check_flag = 0;
+    *check_flag = NO_CTYPE;
 
     // first check if it's a script
 
@@ -308,7 +307,8 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     // reserve enough memory for the entire file and load it
     *output = (char*)malloc(file_len+1);
     fread(*output, file_len, 1, file_pointer);
-    *output[file_len] = '\0';
+    // this breaks, and I don't fully understand why
+    //*output[file_len] = '\0';
 
     status = regexec(&html, resource, 0, NULL, 0);
     if(!status) {

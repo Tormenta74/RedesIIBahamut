@@ -23,6 +23,7 @@ HTTP = http
 
 TESTCGI = testcgi
 TESTCONF = testconfig
+TESTSCRIPTS = testscripts
 
 # main programs
 
@@ -32,11 +33,11 @@ SERVER = server
 
 # core target of the makefile
 
-TARGET = $(SERVER)
+TARGET = $(TESTSCRIPTS)
 
 # cleaning targets
 
-CLEAN = ./$(TESTCGI) ./$(TESTCONF)
+CLEAN = ./$(TESTCGI) ./$(TESTCONF) ./$(TESTSCRIPTS)
 CLEAN += ./$(ECHOS) ./$(FILES) ./$(SERVER)
 
 # library list of modules
@@ -96,6 +97,11 @@ $(TESTCGI): $(BUILDDIR)/$(TESTCGI).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(TESTCONF): $(BUILDDIR)/$(TESTCONF).o $(BUILDDIR)/$(CONFIG).o
+	@echo "Enlazando $(notdir $@): $(notdir $^)"
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+
+$(TESTSCRIPTS): $(BUILDDIR)/$(TESTSCRIPTS).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o $(BUILDDIR)/$(FINDER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
