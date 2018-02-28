@@ -1,9 +1,0 @@
-# Fichero alternativo de configuración para el servidor HTTP de la pareja 9
-# Fernando Villar Gómez
-# Diego Sáinz de Medrano Otero
-server_root = /home/tormenta/RII/Practicas/p1/
-server_signature = bahamut
-max_clients = 15
-listen_port = 8001
-daemon = 1
-iterative = 0

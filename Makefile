@@ -14,9 +14,10 @@ SRCLIBDIR = srclib
 
 CONFIG = config
 SCRIPT = cgi
-PARSER = parser
-SERVER = server
 DUPER = remap-pipe-fds
+FINDER = finder
+HEADERS = headers
+HTTP = http
 
 # test main programs
 
@@ -27,19 +28,19 @@ TESTCONF = testconfig
 
 ECHOS = echo
 FILES = file
-HTTPS = http
+SERVER = server
 
 # core target of the makefile
 
-TARGET = $(HTTPS)
+TARGET = $(SERVER)
 
 # cleaning targets
 
 CLEAN = ./$(TESTCGI) ./$(TESTCONF)
-CLEAN += ./$(ECHOS) ./$(FILES) ./$(HTTPS)
+CLEAN += ./$(ECHOS) ./$(FILES) ./$(SERVER)
 
 # library list of modules
-LIBS = libdaemon libconcurrent libtcp picohttpparser
+LIBS = libdaemon libconcurrent libtcp libserver picohttpparser
 # library name
 _LIB = redes2
 LIB = $(patsubst %,$(LIBSDIR)/lib%.a, $(_LIB))
@@ -72,17 +73,17 @@ before:
 #
 
 # echo: echo(main) server
-$(ECHOS): $(BUILDDIR)/$(ECHOS).o $(BUILDDIR)/$(SERVER).o
+$(ECHOS): $(BUILDDIR)/$(ECHOS).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # file: file(main) server
-$(FILES): $(BUILDDIR)/$(FILES).o $(BUILDDIR)/$(SERVER).o
+$(FILES): $(BUILDDIR)/$(FILES).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 # http: http(main) parser
-$(HTTPS): $(BUILDDIR)/$(HTTPS).o $(BUILDDIR)/$(PARSER).o
+$(SERVER): $(BUILDDIR)/$(SERVER).o $(BUILDDIR)/$(HTTP).o $(BUILDDIR)/$(CONFIG).o $(BUILDDIR)/$(FINDER).o $(BUILDDIR)/$(HEADERS).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -130,8 +131,8 @@ $(BUILDLIBDIR)/%.o: $(SRCLIBDIR)/%.c
 
 clean:
 	@echo "Limpiando objetos y ejecutables"
-	@rm -rf ./$(BUILDDIR)/* ./$(CLEAN)
+	@rm -f ./$(BUILDDIR)/* ./$(CLEAN)
 
 clean_libs:
 	@echo "Limpiando librerías"
-	@rm -rf ./$(BUILDLIBDIR)/*
+	@rm -f ./$(BUILDLIBDIR)/*
