@@ -99,7 +99,10 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         sprintf(headers[4].value, lm_buf);
 
         *num_headers = 5;
+        free(lm_buf);
     }
+
+    free(date_buf);
 
     return OK;
 }

@@ -228,7 +228,7 @@ int fill_content_type(const char *type, char **contenttype) {
     }
 
     sprintf(*contenttype, "%s", type);
-    *contenttype[strlen(type)] = '\0';
+    //*contenttype[strlen(type)] = '\0';
 
     return OK;
 }
@@ -308,7 +308,19 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     // reserve enough memory for the entire file and load it
     *output = (char*)malloc(file_len+1);
     fread(*output, file_len, 1, file_pointer);
-    *output[file_len] = '\0';
+    //*output[file_len] = '\0';
+
+    status = regexec(&txt, resource, 0, NULL, 0);
+    if(!status) {
+        if(fill_content_type("text/plain", contenttype) != ERR) {
+            *check_flag = 1;
+        }
+        return file_len;
+    } else if(status != REG_NOMATCH) {
+        regerror(status, &txt, errbuf, 128);
+        print("Regex (.txt extension) match failed: %s", errbuf);
+        return ERR;
+    }
 
     status = regexec(&html, resource, 0, NULL, 0);
     if(!status) {

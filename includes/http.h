@@ -14,7 +14,9 @@ typedef struct http_req_data {
     int version;
     char *method;
     char *path;
+    size_t path_len;
     char *body;
+    size_t body_len;
     int num_headers;
     struct http_pairs headers[MAX_HEADERS];
 } http_req_data_t;
@@ -31,6 +33,7 @@ void http_request_data_free(struct http_req_data *req_data);
 int http_request_parse(char *buf, size_t buflen, struct http_req_data *req_data);
 
 int http_request_body(char *buf, char **body);
+int http_request_get_split(char *buf, size_t buflen, char **path, char **args, size_t *args_len);
 int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len);
 
 // not used

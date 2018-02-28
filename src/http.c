@@ -21,7 +21,7 @@ void http_request_data_print(struct http_req_data *rd) {
     print("\nHeaders:");
 
     for(i=0; i<rd->num_headers; i++) {
-        print("%s\t%s", rd->headers[i].name, rd->headers[i].value);
+        print("%s:\t%s", rd->headers[i].name, rd->headers[i].value);
     }
 
     if(rd->body) {
@@ -78,6 +78,43 @@ int http_response_body(char *buf, char **body) {
     return OK;
 }
 
+/* caller must free memory */
+int http_request_get_split(char *buf, size_t buflen, char **path, char **args, size_t *args_len) {
+    char *aux;
+    size_t path_len_aux, args_len_aux;
+
+    if (buf == NULL) {
+        return ERR;
+    }
+
+    aux = buf;
+    while(*aux != '?' && *aux != '\0') {
+        aux++;
+    }
+    if (*aux == '\0') {
+        *args = NULL;
+        *args_len = 0;
+        *path = buf;
+        return OK;
+    }
+
+    path_len_aux = aux - buf;
+    aux++;
+    args_len_aux = buflen - (aux - buf);
+
+    *path = (char*)malloc(sizeof(char)*path_len_aux);
+    *args = (char*)malloc(sizeof(char)*args_len_aux);
+    if(!*path || !*args) {
+        return ERR;
+    }
+
+    sprintf(*path, "%.*s", (int)path_len_aux, buf);
+    sprintf(*args, "%.*s", (int)args_len_aux, aux);
+    *args_len = args_len_aux;
+
+    return OK;
+}
+
 /* wraps phr_parse_request and returns required information in a simple way */
 int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
     char *method_aux, *path_aux, *body_aux;
@@ -109,6 +146,7 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
+    rd->path_len = path_len;
     sprintf(rd->path, "%.*s", (int)path_len, path_aux);
 
     ret = http_response_body(buf, &body_aux);
@@ -118,9 +156,11 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
     }
     if(body_aux == NULL) {
         rd->body = NULL;
+        rd->body_len = 0;
     } else {
         body_len = buflen - (body_aux - buf);
         rd->body = (char*)malloc(body_len*sizeof(char));
+        rd->body_len = body_len;
         if(!rd->body) {
             print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
             return ERR;
@@ -144,9 +184,6 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
 
     return OK;
 }
-
-
-
 
 /* builds server responses */
 int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len) {
