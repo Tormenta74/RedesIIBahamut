@@ -27,8 +27,6 @@ void http_request_data_print(struct http_req_data *rd) {
 
     if(rd->body) {
         print("Body: %s", rd->body);
-    } else {
-        print("Body: empty");
     }
 }
 
@@ -54,8 +52,9 @@ void http_request_data_free(struct http_req_data *rd) {
  */
 int http_response_body(char *buf, char **body) {
     char sequence[5], *pointer;
+    int i = 0;
 
-    if (buf == NULL || body == NULL) {
+    if(buf == NULL || body == NULL) {
         return ERR;
     }
 
@@ -63,11 +62,11 @@ int http_response_body(char *buf, char **body) {
     do {
         sprintf(sequence, "%.*s", 4, pointer);
         pointer++;
-    } while(strcmp(sequence, "\r\n\r\n"));
+    } while(strcmp(sequence, "\r\n\r\n") != 0 || i < strlen(buf));
 
     pointer += 3;
 
-    if (strcmp(pointer, "\0")) {
+    if(strcmp(pointer, "\0")) {
         *body = pointer;
     } else {
         *body = NULL;
@@ -114,7 +113,7 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
         print("http_response_body failure.\n");
         return ERR;
     }
-    if (body_aux == NULL) {
+    if(body_aux == NULL) {
         rd->body = NULL;
     } else {
         body_len = buflen - (body_aux - buf);
@@ -215,7 +214,7 @@ int argument_parser(char *buf, struct http_args_data *arguments) {
     char *aux;
     int counter=0, index=0;
 
-    if (buf == NULL || arguments == NULL) {
+    if(buf == NULL || arguments == NULL) {
         print("Argument parsing failure.\n");
         return ERR;
     }
@@ -230,7 +229,7 @@ int argument_parser(char *buf, struct http_args_data *arguments) {
     }
 
     // exits if we have exceeded the maximum number of arguments, sets num_pairs otherwise
-    if (counter >= MAX_ARGS) {
+    if(counter >= MAX_ARGS) {
         print("Too many arguments. Argument parsing failure.\n");
         return ERR;
     }
@@ -255,7 +254,7 @@ int argument_parser(char *buf, struct http_args_data *arguments) {
             index++;
         }
         // when finding '\0' we have finished exploring the original buffer
-        if (*aux == '\0') {
+        if(*aux == '\0') {
             break;
         }
         // continues to the next character
@@ -271,13 +270,13 @@ int request_argument_parser(char *method, char *buffer, struct http_args_data *a
     int ret;
     char *aux;
 
-    if (method == NULL || buffer == NULL || args == NULL) {
+    if(method == NULL || buffer == NULL || args == NULL) {
         print("Request arguments parsing failure.\n");
         return ERR;
     }
 
     // checks if method is actually "GET" or "POST"
-    if ((ret = strcmp(method, "GET")) && strcmp(method, "POST")) {
+    if((ret = strcmp(method, "GET")) && strcmp(method, "POST")) {
         print("Request method when parsing arguments failure.\n");
         return ERR;
     }
@@ -285,15 +284,15 @@ int request_argument_parser(char *method, char *buffer, struct http_args_data *a
     // if method is "GET", takes the substring after the '?' in the url (the buffer needs to be the path)
     // if method is "POST", takes the whole buffer (the buffer needs to be the body)
     aux = strdup(buffer);
-    if (!ret) {
-        while (*aux != '?') {
+    if(!ret) {
+        while(*aux != '?') {
             aux++;
         }
         aux++;
     }
 
     ret = argument_parser(aux, args);
-    if (ret == ERR) {
+    if(ret == ERR) {
         print("Argument parser failure, as you have seen.\n");
         return ERR;
     }

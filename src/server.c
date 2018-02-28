@@ -79,7 +79,7 @@ int main() {
     // http parsing related
 
     // change your request here
-    sprintf(buf2, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\n");
+    sprintf(buf2, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nJeje soy un chico #listo\r\n\r\n");
     //sprintf(buf, "OPTIONS /somedir/page.html HTTP/1.1\r\n\r\n");
 
     // change the number directly for now: strlen is not reliable
