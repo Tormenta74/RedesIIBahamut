@@ -47,3 +47,15 @@ char *header_date() {
 char *header_server(struct server_options so) {
     return so.server_signature;
 }
+
+char *header_last_modified(char *path) {
+    int ret;
+    struct stat sb;
+
+    ret = stat(path, &sb);
+    if (ret) {
+        return NULL;
+    }
+
+    return date_generator(&sb.st_mtime);
+}

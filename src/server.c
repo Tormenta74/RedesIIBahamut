@@ -26,7 +26,7 @@ int process_request(char *buf, size_t buflen, char *response) {
     http_request_data_print(&rd);
 
     if(ret == ERR) {
-        print("Error when processing request.\n");
+        print("Error when processing request.");
         return ERR;
     }
 
@@ -51,7 +51,7 @@ int process_request(char *buf, size_t buflen, char *response) {
         ret = http_response_build(response, rd.version, 200, "OK", 2, 3, res_headers, NULL, 0);
 
         if(ret == ERR) {
-            print("Error while creating OPTIONS response.\n");
+            print("Error while creating OPTIONS response.");
             free(date_buf);
             return ERR;
         }
@@ -75,31 +75,28 @@ int main() {
         printf("Parsing failed.\n");
         exit(ERR);
     }
-
     // http parsing related
 
     // change your request here
-    sprintf(buf2, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nJeje soy un chico #listo\r\n\r\n");
-    //sprintf(buf, "OPTIONS /somedir/page.html HTTP/1.1\r\n\r\n");
-
+    //sprintf(buf2, "GET /somedir/page.html HTTP/1.1\r\nHost: www.someschool.edu\r\nUser-Agent: Mozilla/4.0\r\nConnection: close\r\nAccept-language: fr\r\n\r\nJeje soy un chico #listo\r\n\r\n");
+    sprintf(buf, "OPTIONS /somedir/page.html HTTP/1.1\r\n\r\nHolamuchachos");
     // change the number directly for now: strlen is not reliable
-    // ret = process_request(buf, 44, response);
-    //
-    // if(ret == ERR) {
-    //     printf("Parsing failed.\n");
-    //     return ERR;
-    // }
-    //
-    // printf("\nResponse:\n");
-    // printf("%s\n", response);
-
-    ret = http_request_parse(buf2, strlen(buf2), &rd);
-    if (ret == ERR) {
-        printf("Request failed.\n");
+    ret = process_request(buf, 52, response);
+    if(ret == ERR) {
+        printf("Parsing failed.\n");
         return ERR;
     }
 
-    http_request_data_print(&rd);
+    printf("\nResponse:\n");
+    printf("%s\n", response);
+
+    // ret = http_request_parse(buf2, strlen(buf2), &rd);
+    // if (ret == ERR) {
+    //     printf("Request failed.\n");
+    //     return ERR;
+    // }
+    //
+    // http_request_data_print(&rd);
 
     return OK;
 }

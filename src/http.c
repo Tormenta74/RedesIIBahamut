@@ -47,8 +47,7 @@ void http_request_data_free(struct http_req_data *rd) {
  */
 
 
-/* function to set body pointer, argument 'buf' must contain the string
- * "\r\n\r\n" to work properly. Sets NULL if there is no body.
+/* function to set body pointer, sets NULL if there is no body.
  */
 int http_response_body(char *buf, char **body) {
     char sequence[5], *pointer;
@@ -62,11 +61,16 @@ int http_response_body(char *buf, char **body) {
     do {
         sprintf(sequence, "%.*s", 4, pointer);
         pointer++;
-    } while(strcmp(sequence, "\r\n\r\n") != 0 || i < strlen(buf));
+        i++;
+    } while(strcmp(sequence, "\r\n\r\n")!=0 && pointer!='\0');
+
+    if (pointer == '\0') {
+        return ERR;
+    }
 
     pointer += 3;
 
-    if(strcmp(pointer, "\0")) {
+    if(pointer != '\0') {
         *body = pointer;
     } else {
         *body = NULL;
