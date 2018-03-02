@@ -31,7 +31,7 @@
  * char **output: pointer to the memory zone where to write the output of the script
  *
  * Return: ERR in case of failure at any point. Size of the output string otherwise.
- * */
+ */
 long cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output) {
     int status = ERR, nread = 0;
     long output_size = 0;
