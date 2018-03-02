@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "config.h"
 #include "picohttpparser.h"
+#include "finder.h"
 #include "headers.h"
 #include "http.h"
 
@@ -119,7 +120,6 @@ int process_request(char *buf, size_t buflen, char *response) {
 int main() {
     int ret;
     char buf[MAX_CHAR], buf2[MAX_CHAR], buf3[MAX_CHAR], response[MAX_CHAR];
-    struct http_req_data rd;
 
     // config related
 

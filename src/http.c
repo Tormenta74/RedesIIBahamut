@@ -61,15 +61,15 @@ int http_response_body(char *buf, char **body) {
         sprintf(sequence, "%.*s", 4, pointer);
         pointer++;
         i++;
-    } while(strcmp(sequence, "\r\n\r\n")!=0 && pointer!='\0');
+    } while(strcmp(sequence, "\r\n\r\n")!=0 && *pointer!='\0');
 
-    if (pointer == '\0') {
+    if (*pointer == '\0') {
         return ERR;
     }
 
     pointer += 3;
 
-    if(pointer != '\0') {
+    if(*pointer != '\0') {
         *body = pointer;
     } else {
         *body = NULL;
