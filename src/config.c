@@ -70,6 +70,10 @@ int config_parse(char* filename, struct server_options *so) {
                 // failed to get memory
                 return ERR;
             }
+            // let's get rid of those ugly ending /
+            if(so->server_root[strlen(so->server_root) - 1] == '/') {
+                so->server_root[strlen(so->server_root) - 1] = '\0';
+            }
             continue;
         }
         if(strcmp(option, "server_signature") == 0) {

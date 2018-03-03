@@ -435,10 +435,7 @@ int main() {
 
 // small main to uncomment when I want to test something
 //int main() {
-//    int status, num_headers;
-//    char request[MAX_CHAR], response[MAX_CHAR];
-//    struct http_req_data rd;
-//    struct http_pairs res_headers[MAX_HEADERS];
+//    int status;
 //
 //    // config related
 //
@@ -448,27 +445,7 @@ int main() {
 //        exit(ERR);
 //    }
 //
-//    sprintf(request, "OPTIONS / HTTP/1.1\r\nHost: localhost\r\nUser-Agent: A Truly Awesome Boss\r\nConnection: close\r\nAccept-language: en\r\n\r\nJeje soy un chico #listo\r\n\r\n");
-//
-//    status = http_request_parse(request, 158, &rd);
-//    if(status == ERR) {
-//        print("Error parsing the simplest of requests.");
-//        return ERR;
-//    }
-//
-//    status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
-//    if(status == ERR) {
-//        print("Error while creating headers for OPTIONS response.");
-//        return ERR;
-//    }
-//
-//    status = http_response_build(response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
-//    if(status == ERR) {
-//        print("Error while creating OPTIONS response.");
-//        return ERR;
-//    }
-//
-//    printf("Response: %s\n", response);
+//    config_print(&so);
 //
 //    return OK;
 //}
