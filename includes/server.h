@@ -3,11 +3,12 @@
 
 #include "config.h"
 
-#define MAX_CLIENTS 512
+#define MAX_CLIENTS     512
+#define MAX_RECV_LEN    3*1024
 
-/* Prototipo de función de atención a un socket 
+/* Prototipo de función de atención a un socket
  * compatible con el formato de los hilos de p_thread.
- * El parámetro de tipo void* será, por convención, 
+ * El parámetro de tipo void* será, por convención,
  * un puntero a int, que será el file descriptor del socket.
  * Es responsabilidad de la rutina liberar los argumentos */
 typedef void* attention_routine(void*);

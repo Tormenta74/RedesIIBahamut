@@ -37,10 +37,10 @@ int http_request_get_split(char *buf, size_t buflen, char **path, char **args, s
 int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len);
 
 // not used
-int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers);
-int argument_parser(char *buf, struct http_args_data *arguments);
-int request_argument_parser(char *method, char *buffer, struct http_args_data *args);
-// depr
-int http_request_parse_old(char *buf, size_t buflen, char *method, char *path, int *version, struct http_pairs *headers, int *num_headers);
+//int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers);
+//int argument_parser(char *buf, struct http_args_data *arguments);
+//int request_argument_parser(char *method, char *buffer, struct http_args_data *args);
+//// depr
+//int http_request_parse_old(char *buf, size_t buflen, char *method, char *path, int *version, struct http_pairs *headers, int *num_headers);
 
 #endif

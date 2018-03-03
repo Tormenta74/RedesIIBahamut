@@ -71,6 +71,30 @@ int tcp_receive(int sockfd, void *buffer, int size) {
     return recv(sockfd, buffer, (size_t)size, 0);
 }
 
+/*
+ * Description: Stores the message received through a socket of maximum
+ *              length of "size" in the "buffer" memory address. Note:
+ *              this function differs from the other in that is non
+ *              blocking, as specified in recv(2). Use when tcp_receive
+ *              has a possible overflow.
+ *
+ * In:
+ * int sockfd: file descriptor of the socket to receive from
+ * void *buffer: generic pointer to the memory address to store incoming
+ *               data
+ * int size: maximum length of the message
+ *
+ * Return: The number of bytes received. -1 on error.
+ */
+int tcp_receive_nb(int sockfd, void *buffer, int size) {
+    // sanity check
+    if(sockfd < 0 || buffer == NULL || size <= 0) {
+        return ERR;
+    }
+    // NON blocking call
+    return recv(sockfd, buffer, (size_t)size, MSG_DONTWAIT);
+}
+
 /***********************************************
  * SERVER SIDE
  */
