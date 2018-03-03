@@ -128,6 +128,20 @@ int process_request(char *buf, size_t buflen, char *response) {
     return OK;
 }
 
+void error_response(int errcode, char *err, size_t errlen, char *err_extended, char **res_output) {
+    int num_headers;
+    struct http_pairs res_headers[MAX_HEADERS];
+    char response[MAX_CHAR], body[MAX_CHAR];
+
+    header_build(so, NULL, NULL, 0, 0, 0, res_headers, &num_headers);
+
+    sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
+
+    http_response_build(response, 1, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
+
+    *res_output = response;
+}
+
 /*
  * Description: Sends the 400 error code response, including an HTML page.
  *
@@ -135,7 +149,20 @@ int process_request(char *buf, size_t buflen, char *response) {
  * int sockfd: file descriptor of bad requester socket
  */
 void ill_formed_request(int sockfd) {
+    char *response;
 
+    error_response(400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", &response);
+
+    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
+        print("could not send response (%s:%d).", __FILE__, __LINE__);
+        print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
+        conc_exit();
+    }
 }
 
 /*
@@ -145,7 +172,42 @@ void ill_formed_request(int sockfd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 void unsupported_verb(int sockfd) {
+    char *response;
 
+    error_response(501, "Not Implemented", 15, "This method is not implemented by the server.", &response);
+
+    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
+        print("could not send response (%s:%d).", __FILE__, __LINE__);
+        print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
+        conc_exit();
+    }
+}
+
+/*
+ * Description: Sends the 404 error code response, including an HTML page.
+ *
+ * In: int sockfd: file descriptor of way too entitled socket
+ */
+void resource_not_found(int sockfd) {
+    char *response;
+
+    error_response(404, "Not Found", 9, "The server has not found any resource matching the request URI.", &response);
+
+    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
+        print("could not send response (%s:%d).", __FILE__, __LINE__);
+        print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
+        conc_exit();
+    }
 }
 
 /*
@@ -155,6 +217,75 @@ void unsupported_verb(int sockfd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 int get(int sockfd, struct http_req_data *rd) {
+    int status, num_headers, check_flag, response_len;
+    long file_len;
+    struct http_pairs res_headers[MAX_HEADERS];
+    char real_path[MAX_CHAR], *response;
+    char *path_aux, *args_aux, *file_content, *content_type;
+    size_t args_len;
+
+    status = http_request_get_split(rd->path, rd->path_len, &path_aux, &args_aux, &args_len);
+    if(status == ERR) {
+        print("Error while splitting path in GET request.");
+        return ERR;
+    }
+
+    strcpy(real_path, so.server_root);
+    strcat(real_path, path_aux);
+    file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
+
+    status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+    if(status == ERR) {
+        print("Error while creating headers for GET response.");
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        return ERR;
+    }
+
+    status = http_response_build(response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    if(status == ERR) {
+        print("Error while creating GET response.");
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        return ERR;
+    }
+
+    // TO BE MODIFIED
+    response_len = strlen(response);
+    status = 0;
+
+    do {
+        status = tcp_send(sockfd, (const void *)(response + status), response_len - status);
+        if (status < 0) {
+            print("could not send response (%s:%d).", __FILE__, __LINE__);
+            print("errno (send): %s.", strerror(errno));
+
+            mutex_lock(&nconn_lock);
+            n_conn--;
+            mutex_unlock(&nconn_lock);
+
+            conc_exit();
+
+            if (args_len != 0) {
+                free(path_aux);
+                free(args_aux);
+            }
+
+            return ERR;
+        }
+        response += status;
+        response_len -= status;
+    } while (response_len > 0);
+
+    if (args_len != 0) {
+        free(path_aux);
+        free(args_aux);
+    }
+
     return OK;
 }
 
@@ -165,6 +296,50 @@ int get(int sockfd, struct http_req_data *rd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 int post(int sockfd, struct http_req_data *rd) {
+    char real_path[MAX_CHAR], *response;
+    char *file_content, *content_type;
+    long file_len;
+    int check_flag, status, response_len, num_headers;
+    struct http_pairs res_headers[MAX_HEADERS];
+
+    strcpy(real_path, so.server_root);
+    strcat(real_path, rd->path);
+    file_len = finder_load(real_path, rd->body, rd->body_len, &file_content, &content_type, &check_flag);
+
+    status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+    if(status == ERR) {
+        print("Error while creating headers for POST response.");
+        return ERR;
+    }
+
+    status = http_response_build(response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    if(status == ERR) {
+        print("Error while creating POST response.");
+        return ERR;
+    }
+
+    // TO BE MODIFIED
+    response_len = strlen(response);
+    status = 0;
+
+    do {
+        status = tcp_send(sockfd, (const void *)(response + status), response_len - status);
+        if (status < 0) {
+            print("could not send response (%s:%d).", __FILE__, __LINE__);
+            print("errno (send): %s.", strerror(errno));
+
+            mutex_lock(&nconn_lock);
+            n_conn--;
+            mutex_unlock(&nconn_lock);
+
+            conc_exit();
+
+            return ERR;
+        }
+        response += status;
+        response_len -= status;
+    } while (response_len > 0);
+
     return OK;
 }
 
