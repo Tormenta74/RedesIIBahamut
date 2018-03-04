@@ -128,7 +128,7 @@ int process_request(char *buf, size_t buflen, char *response) {
     return OK;
 }
 
-void error_response(int errcode, char *err, size_t errlen, char *err_extended, char **res_output) {
+void error_response(int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
     char response[MAX_CHAR], body[MAX_CHAR];
@@ -139,7 +139,16 @@ void error_response(int errcode, char *err, size_t errlen, char *err_extended, c
 
     http_response_build(response, 1, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
 
-    *res_output = response;
+    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
+        print("could not send response (%s:%d).", __FILE__, __LINE__);
+        print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
+        conc_exit();
+    }
 }
 
 /*
@@ -149,20 +158,7 @@ void error_response(int errcode, char *err, size_t errlen, char *err_extended, c
  * int sockfd: file descriptor of bad requester socket
  */
 void ill_formed_request(int sockfd) {
-    char *response;
-
-    error_response(400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", &response);
-
-    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
-        print("could not send response (%s:%d).", __FILE__, __LINE__);
-        print("errno (send): %s.", strerror(errno));
-
-        mutex_lock(&nconn_lock);
-        n_conn--;
-        mutex_unlock(&nconn_lock);
-
-        conc_exit();
-    }
+    error_response(400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", sockfd);
 }
 
 /*
@@ -172,20 +168,7 @@ void ill_formed_request(int sockfd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 void unsupported_verb(int sockfd) {
-    char *response;
-
-    error_response(501, "Not Implemented", 15, "This method is not implemented by the server.", &response);
-
-    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
-        print("could not send response (%s:%d).", __FILE__, __LINE__);
-        print("errno (send): %s.", strerror(errno));
-
-        mutex_lock(&nconn_lock);
-        n_conn--;
-        mutex_unlock(&nconn_lock);
-
-        conc_exit();
-    }
+    error_response(501, "Not Implemented", 15, "This method is not implemented by the server.", sockfd);
 }
 
 /*
@@ -194,20 +177,16 @@ void unsupported_verb(int sockfd) {
  * In: int sockfd: file descriptor of way too entitled socket
  */
 void resource_not_found(int sockfd) {
-    char *response;
+    error_response(404, "Not Found", 9, "The server has not found any resource matching the request URI.", sockfd);
+}
 
-    error_response(404, "Not Found", 9, "The server has not found any resource matching the request URI.", &response);
-
-    if(tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
-        print("could not send response (%s:%d).", __FILE__, __LINE__);
-        print("errno (send): %s.", strerror(errno));
-
-        mutex_lock(&nconn_lock);
-        n_conn--;
-        mutex_unlock(&nconn_lock);
-
-        conc_exit();
-    }
+/*
+ * Description: Sends the 415 error code response, including an HTML page.
+ *
+ * In: int sockfd: file descriptor of way too entitled socket
+ */
+void unsupported_media_type(int sockfd) {
+    error_response(415, "Unsupported Media Type", 22, "The requested resource has a media type not supported by the server.", sockfd);
 }
 
 /*
@@ -233,6 +212,12 @@ int get(int sockfd, struct http_req_data *rd) {
     strcpy(real_path, so.server_root);
     strcat(real_path, path_aux);
     file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
+
+    if(file_len == NOT_FOUND) {
+        return NOT_FOUND;
+    } else if(file_len == NO_MATCH) {
+        return NO_MATCH;
+    }
 
     status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
     if(status == ERR) {
@@ -305,6 +290,12 @@ int post(int sockfd, struct http_req_data *rd) {
     strcpy(real_path, so.server_root);
     strcat(real_path, rd->path);
     file_len = finder_load(real_path, rd->body, rd->body_len, &file_content, &content_type, &check_flag);
+
+    if(file_len == NOT_FOUND) {
+        return NOT_FOUND;
+    } else if(file_len == NO_MATCH) {
+        return NO_MATCH;
+    }
 
     status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
     if(status == ERR) {
@@ -526,14 +517,22 @@ void *serve_http(void *args) {
         switch(verb) {
         case GET:
             status = get(sockfd, &rd);
-            if(status == ERR) {
+            if(status == NOT_FOUND) {
+                resource_not_found(sockfd);
+            } else if(status == NO_MATCH) {
+                unsupported_media_type(sockfd);
+            } else if(status == ERR) {
                 print("GET processing failed.");
                 goto end_serve_http;
             }
             break;
         case POST:
             status = post(sockfd, &rd);
-            if(status == ERR) {
+            if(status == NOT_FOUND) {
+                resource_not_found(sockfd);
+            } else if(status == NO_MATCH) {
+                unsupported_media_type(sockfd);
+            } else if(status == ERR) {
                 print("POST processing failed.");
                 goto end_serve_http;
             }

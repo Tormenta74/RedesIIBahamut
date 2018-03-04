@@ -297,7 +297,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
 
     if((file_pointer = fopen(resource, "r")) == NULL) {
         print("Could not read file %s", resource);
-        return ERR;
+        return NOT_FOUND;
     }
 
     // calculate file size
@@ -456,5 +456,5 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
 
     // no match at all
     print("Resource does not match any of the supported scripts.");
-    return file_len;
+    return NO_MATCH;
 }
