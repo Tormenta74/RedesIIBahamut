@@ -265,39 +265,47 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
  * Return:
  * ERR if there has been an error during the process, OK otherwise
  * */
-int http_response_build(char** buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len) {
-    int i;
-    char buf[MAX_CHAR], buf_aux[MAX_CHAR];
+int http_response_build(void **buffer, size_t *buflen, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, void *body, size_t body_len) {
+    int i, j;
+    char buf_aux1[MAX_CHAR], buf_aux2[MAX_CHAR];
+    void **buf;
+    size_t head_len;
 
     if (resp == NULL || headers == NULL) {
         return ERR;
     }
 
     /* prints first line: http version, response code and response message */
-    sprintf(buf, "HTTP/1.%d %d %.*s\r\n", version, rescode, (int) resp_len, resp);
+    sprintf(buf_aux1, "HTTP/1.%d %d %.*s\r\n", version, rescode, (int) resp_len, resp);
 
     /* prints headers, pairs {name, value} */
     for (i=0; i<num_headers; i++) {
-        sprintf(buf_aux, "%s: %s\r\n", headers[i].name, headers[i].value);
-        strcat(buf, buf_aux);
+        sprintf(buf_aux2, "%s: %s\r\n", headers[i].name, headers[i].value);
+        strcat(buf_aux1, buf_aux2);
     }
 
     /* extra /r/n to indicate end of headers and start of body */
-    strcat(buf, "\r\n");
-
-    /* prints body */
-    if ((int)body_len > 0) {
-        sprintf(buf_aux, "%.*s", (int)body_len, body);
-        strcat(buf, buf_aux);
-    }
+    strcat(buf_aux1, "\r\n");
+    head_len = strlen(buf_aux1);
+    *buflen = head_len + body_len;
 
     /* allocates memory and generates output, it is the responsibility of the caller to free it */
-    *buffer = (char*)malloc(sizeof(char)*strlen(buf));
-    if (!*buffer) {
+    *buf = malloc(*buflen);
+    if (!*buf) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
-    sprintf(*buffer, "%s", buf);
+
+    memcpy(*buf, (void *)buf_aux1, head_len);
+
+    /* prints body */
+    if ((int)body_len > 0) {
+        memcpy((*buf)+head_len, body, body_len);
+        //sprintf(buf_aux2, "%.*s", (int)body_len, body);
+        //strcat(buf, buf_aux2);
+    }
+
+    *buffer = *buf;
 
     return OK;
 }

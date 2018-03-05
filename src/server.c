@@ -27,120 +27,121 @@ extern int n_conn;                  // server.c
 
 struct server_options so;
 
-int process_request(char *buf, size_t buflen, char *response) {
-    int status, num_headers;
-    struct http_pairs res_headers[MAX_HEADERS];
-    struct http_req_data rd;
-    char real_path[MAX_CHAR];
-    char *path_aux, *args_aux, *file_content, *content_type;
-    size_t args_len;
-    int check_flag;
-    long file_len;
-
-    status = http_request_parse(buf, buflen, &rd);
-
-    http_request_data_print(&rd);
-
-    if (status == ERR) {
-        print("Error when processing request.");
-        return ERR;
-    }
-
-    // GET
-    if (strcmp(rd.method, "GET") == 0) {
-        status = http_request_get_split(rd.path, rd.path_len, &path_aux, &args_aux, &args_len);
-        if (status == ERR) {
-            print("Error while splitting path in GET request.");
-            return ERR;
-        }
-
-        status = finder_setup();
-        if (status == ERR) {
-            print("finder_setup failure.");
-            return ERR;
-        }
-        strcpy(real_path, so.server_root);
-        strcat(real_path, path_aux);
-        file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
-
-        status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
-        if (status == ERR) {
-            print("Error while creating headers for GET response.");
-            return ERR;
-        }
-
-        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
-        if (status == ERR) {
-            print("Error while creating GET response.");
-            return ERR;
-        }
-
-        finder_clean();
-        if (args_len != 0) {
-            free(path_aux);
-            free(args_aux);
-        }
-    }
-
-    // POST
-    if (strcmp(rd.method, "POST") == 0) {
-        status = finder_setup();
-        if (status == ERR) {
-            print("finder_setup failure.");
-            return ERR;
-        }
-        strcpy(real_path, so.server_root);
-        strcat(real_path, rd.path);
-        file_len = finder_load(real_path, rd.body, rd.body_len, &file_content, &content_type, &check_flag);
-
-        status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
-        if (status == ERR) {
-            print("Error while creating headers for POST response.");
-            return ERR;
-        }
-
-        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
-        if (status == ERR) {
-            print("Error while creating POST response.");
-            return ERR;
-        }
-
-        finder_clean();
-    }
-
-    // OPTIONS
-    if (strcmp(rd.method, "OPTIONS") == 0) {
-        status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
-        if (status == ERR) {
-            print("Error while creating headers for OPTIONS response.");
-            return ERR;
-        }
-
-        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
-        if (status == ERR) {
-            print("Error while creating OPTIONS response.");
-            return ERR;
-        }
-
-        return OK;
-    }
-
-    return OK;
-}
+// int process_request(char *buf, size_t buflen, char *response) {
+//     int status, num_headers;
+//     struct http_pairs res_headers[MAX_HEADERS];
+//     struct http_req_data rd;
+//     char real_path[MAX_CHAR];
+//     char *path_aux, *args_aux, *file_content, *content_type;
+//     size_t args_len;
+//     int check_flag;
+//     long file_len;
+//
+//     status = http_request_parse(buf, buflen, &rd);
+//
+//     http_request_data_print(&rd);
+//
+//     if (status == ERR) {
+//         print("Error when processing request.");
+//         return ERR;
+//     }
+//
+//     // GET
+//     if (strcmp(rd.method, "GET") == 0) {
+//         status = http_request_get_split(rd.path, rd.path_len, &path_aux, &args_aux, &args_len);
+//         if (status == ERR) {
+//             print("Error while splitting path in GET request.");
+//             return ERR;
+//         }
+//
+//         status = finder_setup();
+//         if (status == ERR) {
+//             print("finder_setup failure.");
+//             return ERR;
+//         }
+//         strcpy(real_path, so.server_root);
+//         strcat(real_path, path_aux);
+//         file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
+//
+//         status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+//         if (status == ERR) {
+//             print("Error while creating headers for GET response.");
+//             return ERR;
+//         }
+//
+//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+//         if (status == ERR) {
+//             print("Error while creating GET response.");
+//             return ERR;
+//         }
+//
+//         finder_clean();
+//         if (args_len != 0) {
+//             free(path_aux);
+//             free(args_aux);
+//         }
+//     }
+//
+//     // POST
+//     if (strcmp(rd.method, "POST") == 0) {
+//         status = finder_setup();
+//         if (status == ERR) {
+//             print("finder_setup failure.");
+//             return ERR;
+//         }
+//         strcpy(real_path, so.server_root);
+//         strcat(real_path, rd.path);
+//         file_len = finder_load(real_path, rd.body, rd.body_len, &file_content, &content_type, &check_flag);
+//
+//         status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+//         if (status == ERR) {
+//             print("Error while creating headers for POST response.");
+//             return ERR;
+//         }
+//
+//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+//         if (status == ERR) {
+//             print("Error while creating POST response.");
+//             return ERR;
+//         }
+//
+//         finder_clean();
+//     }
+//
+//     // OPTIONS
+//     if (strcmp(rd.method, "OPTIONS") == 0) {
+//         status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
+//         if (status == ERR) {
+//             print("Error while creating headers for OPTIONS response.");
+//             return ERR;
+//         }
+//
+//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
+//         if (status == ERR) {
+//             print("Error while creating OPTIONS response.");
+//             return ERR;
+//         }
+//
+//         return OK;
+//     }
+//
+//     return OK;
+// }
 
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
-    char *response;
     char body[MAX_CHAR];
+    void *response;
+    size_t response_len;
 
     header_build(so, NULL, NULL, 0, 0, 0, res_headers, &num_headers);
 
     sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
 
-    http_response_build(&response, version, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
+    http_response_build(&response, &response_len, version, errcode, err, errlen, num_headers, res_headers, (void *)body, strlen(body));
 
-    if (tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
+    if (tcp_send(sockfd, (const void*)response, (int)response_len) < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
 
@@ -199,12 +200,13 @@ void unsupported_media_type(int sockfd, int version) {
  * int sockfd: file descriptor of way too entitled socket
  */
 int get(int sockfd, struct http_req_data *rd) {
-    int status, num_headers, check_flag, response_len;
+    int status, num_headers, check_flag;
     long file_len;
     struct http_pairs res_headers[MAX_HEADERS];
-    char real_path[MAX_CHAR], *response = NULL, *response_aux;
-    char *path_aux, *args_aux, *file_content, *content_type;
-    size_t args_len;
+    char real_path[MAX_CHAR];
+    char *path_aux, *args_aux, *content_type;
+    void *response, *response_aux, *file_content;
+    size_t args_len, response_len;
 
     status = http_request_get_split(rd->path, rd->path_len, &path_aux, &args_aux, &args_len);
     if (status == ERR) {
@@ -232,7 +234,7 @@ int get(int sockfd, struct http_req_data *rd) {
         return ERR;
     }
 
-    status = http_response_build(&response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    status = http_response_build(&response, &response_len, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, (size_t)file_len);
     if (status == ERR) {
         print("Error while creating GET response.");
         if (args_len != 0) {
@@ -243,12 +245,11 @@ int get(int sockfd, struct http_req_data *rd) {
     }
 
     // TO BE MODIFIED
-    response_len = strlen(response);
     response_aux = response;
     status = 0;
 
     do {
-        status = tcp_send(sockfd, (const void *)(response_aux + status), response_len - status);
+        status = tcp_send(sockfd, (const void *)(response_aux + status), (int)response_len - status);
         if (status < 0) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
@@ -287,10 +288,12 @@ int get(int sockfd, struct http_req_data *rd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 int post(int sockfd, struct http_req_data *rd) {
-    char real_path[MAX_CHAR], *response = NULL, *response_aux;
-    char *file_content, *content_type;
+    char real_path[MAX_CHAR];
+    char *content_type;
+    void *response, *response_aux, *file_content;
+    size_t response_len;
     long file_len;
-    int check_flag, status, response_len, num_headers;
+    int check_flag, status, num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
 
     strcpy(real_path, so.server_root);
@@ -309,19 +312,18 @@ int post(int sockfd, struct http_req_data *rd) {
         return ERR;
     }
 
-    status = http_response_build(&response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    status = http_response_build(&response, &response_len, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
     if (status == ERR) {
         print("Error while creating POST response.");
         return ERR;
     }
 
     // TO BE MODIFIED
-    response_len = strlen(response);
     response_aux = response;
     status = 0;
 
     do {
-        status = tcp_send(sockfd, (const void *)(response_aux + status), response_len - status);
+        status = tcp_send(sockfd, (const void *)(response_aux + status), (int)response_len - status);
         if (status < 0) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
@@ -352,9 +354,10 @@ int post(int sockfd, struct http_req_data *rd) {
  * int version: HTTP version
  */
 int options(int sockfd, int version) {
-    int status, num_headers, response_len;
+    int status, num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
-    char *response;
+    void *response;
+    size_t response_len;
 
     // construct headers
     status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
@@ -364,14 +367,13 @@ int options(int sockfd, int version) {
     }
 
     // construct response
-    status = http_response_build(&response, version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
+    status = http_response_build(response, &response_len, version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
     if (status == ERR) {
         print("Error while creating OPTIONS response.");
         return ERR;
     }
 
-    response_len = strlen(response);
-    status = tcp_send(sockfd, (const void *)response, response_len);
+    status = tcp_send(sockfd, (const void *)response, (int)response_len);
     if (status < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
