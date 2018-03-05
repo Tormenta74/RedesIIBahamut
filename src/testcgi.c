@@ -13,19 +13,19 @@ int main(int argc, char *argv[]) {
     int status;
     char *out;
 
-    if(argc != 3) {
+    if (argc != 3) {
         printf("Uso: ./test resource input\n");
         exit(1);
     }
 
     status = cgi_module_setup();
-    if(status == ERR) {
+    if (status == ERR) {
         printf("cgi_module_setup failed\n");
         exit(1);
     }
 
     status = cgi_exec_script(argv[1], argv[2], strlen(argv[2])+1, &out);
-    if(status == ERR) {
+    if (status == ERR) {
         printf("cgi_exec_script failed\n");
         exit(1);
     }

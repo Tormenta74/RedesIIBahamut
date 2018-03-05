@@ -13,6 +13,7 @@ int tcp_open_socket();
 int tcp_close_socket(int sockfd);
 int tcp_send(int sockfd, const void* msg, int length);
 int tcp_receive(int sockfd, void *buffer, int size);
+int tcp_receive_nb(int sockfd, void *buffer, int size);
 
 /* Server functions */
 

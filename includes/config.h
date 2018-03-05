@@ -1,6 +1,8 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+#include <stdint.h>
+
 typedef struct server_options {
     char *server_root;          // directory
     char *server_signature;     // server name

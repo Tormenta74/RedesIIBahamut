@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     struct server_options so;
 
     status = config_parse("server.conf", &so);
-    if(status == ERR) {
+    if (status == ERR) {
         printf("Parsing failed.\n");
         exit(ERR);
     }
