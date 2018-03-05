@@ -31,11 +31,11 @@ int config_parse(char* filename, struct server_options *so) {
     char *line = NULL;
     char option[17], rest[128 - 17];
     FILE *f;
-    if(!filename || !so) {
+    if (!filename || !so) {
         return ERR;
     }
 
-    if(!(f = fopen(filename, "r"))) {
+    if (!(f = fopen(filename, "r"))) {
         return ERR;
     }
 
@@ -46,66 +46,66 @@ int config_parse(char* filename, struct server_options *so) {
     so->daemon = 1;
     so->iterative = 0;
 
-    while((read = getline(&line, &len, f)) != ERR) {
+    while ((read = getline(&line, &len, f)) != ERR) {
         // line is a comment
-        if(line[0] == '#') {
+        if (line[0] == '#') {
             continue;
         }
 
         // line starts empty
-        if(line[0] == '\n'
+        if (line[0] == '\n'
                 || (line[0] == '\r' && line[1] == '\n')) {
             continue;
         }
 
         //                     v thanks, stackoverflow!
-        if(sscanf(line, "%s = %[^\t\n]", option, rest) != 2) {
+        if (sscanf(line, "%s = %[^\t\n]", option, rest) != 2) {
             // bad formatting
             return ERR;
         }
 
         // I wish C had strings, and they were good enough for switches
-        if(strcmp(option, "server_root") == 0) {
-            if(!(so->server_root = strdup(rest))) {
+        if (strcmp(option, "server_root") == 0) {
+            if (!(so->server_root = strdup(rest))) {
                 // failed to get memory
                 return ERR;
             }
             // let's get rid of those ugly ending /
-            if(so->server_root[strlen(so->server_root) - 1] == '/') {
+            if (so->server_root[strlen(so->server_root) - 1] == '/') {
                 so->server_root[strlen(so->server_root) - 1] = '\0';
             }
             continue;
         }
-        if(strcmp(option, "server_signature") == 0) {
-            if(!(so->server_signature = strdup(rest))) {
+        if (strcmp(option, "server_signature") == 0) {
+            if (!(so->server_signature = strdup(rest))) {
                 // failed to get memory
                 return ERR;
             }
             continue;
         }
-        if(strcmp(option, "max_clients") == 0) {
-            if((so->max_clients = atoi(rest)) <= 0) {
+        if (strcmp(option, "max_clients") == 0) {
+            if ((so->max_clients = atoi(rest)) <= 0) {
                 // this shit ain't right
                 return ERR;
             }
             continue;
         }
-        if(strcmp(option, "listen_port") == 0) {
-            if((so->listen_port = (uint16_t)atoi(rest)) <= 0) {
+        if (strcmp(option, "listen_port") == 0) {
+            if ((so->listen_port = (uint16_t)atoi(rest)) <= 0) {
                 // this shit ain't right
                 return ERR;
             }
             continue;
         }
-        if(strcmp(option, "daemon") == 0) {
-            if((so->daemon = atoi(rest)) < 0) {
+        if (strcmp(option, "daemon") == 0) {
+            if ((so->daemon = atoi(rest)) < 0) {
                 // this shit ain't right
                 return ERR;
             }
             continue;
         }
-        if(strcmp(option, "iterative") == 0) {
-            if((so->iterative = atoi(rest)) < 0) {
+        if (strcmp(option, "iterative") == 0) {
+            if ((so->iterative = atoi(rest)) < 0) {
                 // this shit ain't right
                 return ERR;
             }
@@ -113,7 +113,7 @@ int config_parse(char* filename, struct server_options *so) {
         }
     } /* while */
 
-    if(line) {
+    if (line) {
         free(line);
     }
 
@@ -121,7 +121,7 @@ int config_parse(char* filename, struct server_options *so) {
 }
 
 void config_print(struct server_options *so) {
-    if(!so) {
+    if (!so) {
         return;
     }
 

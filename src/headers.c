@@ -42,7 +42,7 @@ char *date_generator(time_t *t) {
 
     /* formatting */
     nformatted = strftime(buffer, 128, "%a, %d %b %Y %T %Z", timeinfo);
-    if(nformatted == 0) {
+    if (nformatted == 0) {
         return NULL;
     }
 
@@ -159,7 +159,7 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         sprintf(headers[2].name, "Content-Type");
         sprintf(headers[2].value, contenttype);
         sprintf(headers[3].name, "Content-Length");
-        sprintf(headers[3].value, "%d", len);
+        sprintf(headers[3].value, "%ld", len);
         sprintf(headers[4].name, "Last-Modified");
         sprintf(headers[4].value, lm_buf);
 

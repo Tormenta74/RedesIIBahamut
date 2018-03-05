@@ -21,20 +21,20 @@ int finder_setup() {
     int status;
 
     status = regcomp(&doc, "^.*\\.doc$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the doc extension regex.");
         return ERR;
     }
 
     status = regcomp(&docx, "^.*\\.docx$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the docx extension regex.");
         regfree(&doc);
         return ERR;
     }
 
     status = regcomp(&gif, "^.*\\.gif$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the gif extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -42,7 +42,7 @@ int finder_setup() {
     }
 
     status = regcomp(&htm, "^.*\\.htm$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the htm extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -51,7 +51,7 @@ int finder_setup() {
     }
 
     status = regcomp(&html, "^.*\\.html$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the html extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -61,7 +61,7 @@ int finder_setup() {
     }
 
     status = regcomp(&jpeg, "^.*\\.jpeg$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the jpeg extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -72,7 +72,7 @@ int finder_setup() {
     }
 
     status = regcomp(&jpg, "^.*\\.jpg$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the jpg extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -84,7 +84,7 @@ int finder_setup() {
     }
 
     status = regcomp(&mpeg, "^.*\\.mpeg$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the mpeg extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -97,7 +97,7 @@ int finder_setup() {
     }
 
     status = regcomp(&mpg, "^.*\\.mpg$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the mpg extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -111,7 +111,7 @@ int finder_setup() {
     }
 
     status = regcomp(&pdf, "^.*\\.pdf$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the pdf extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -126,7 +126,7 @@ int finder_setup() {
     }
 
     status = regcomp(&php, "^.*\\.php$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the php extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -142,7 +142,7 @@ int finder_setup() {
     }
 
     status = regcomp(&png, "^.*\\.png$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the png extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -159,7 +159,7 @@ int finder_setup() {
     }
 
     status = regcomp(&py, "^.*\\.py$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the Python extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -178,7 +178,7 @@ int finder_setup() {
 
 
     status = regcomp(&txt, "^.*\\.txt$", 0);
-    if(status) {
+    if (status) {
         print("Could not compile the txt extension regex.");
         regfree(&doc);
         regfree(&docx);
@@ -218,12 +218,12 @@ void finder_clean() {
 
 // note: if "type" has spaces in it, this will work poorly
 int fill_content_type(const char *type, char **contenttype) {
-    if(!type || !contenttype) {
+    if (!type || !contenttype) {
         return ERR;
     }
 
     *contenttype = (char*)malloc((strlen(type) + 1) * sizeof(char));
-    if(!*contenttype) {
+    if (!*contenttype) {
         return ERR;
     }
 
@@ -251,7 +251,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     FILE *file_pointer;
     long file_len;
 
-    if(!resource || !output || !contenttype) {
+    if (!resource || !output || !contenttype) {
         return ERR;
     }
 
@@ -260,34 +260,34 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     // first check if it's a script
 
     status = regexec(&php, resource, 0, NULL, 0);
-    if(!status) {
+    if (!status) {
         // launch fork_exec php
-        if((file_len = cgi_exec_script("php", resource, input, inlen, output)) == ERR) {
+        if ((file_len = cgi_exec_script("php", resource, input, inlen, output)) == ERR) {
             // failed to execute
             return ERR;
         }
-        if(fill_content_type("text/plain", contenttype) != ERR) {
+        if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &php, errbuf, 128);
         print("Regex (.php extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&py, resource, 0, NULL, 0);
-    if(!status) {
+    if (!status) {
         // launch fork_exec python
-        if((file_len = cgi_exec_script("python", resource, input, inlen, output)) == ERR) {
+        if ((file_len = cgi_exec_script("python", resource, input, inlen, output)) == ERR) {
             // failed to execute
             return ERR;
         }
-        if(fill_content_type("text/plain", contenttype) != ERR) {
+        if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &py, errbuf, 128);
         print("Regex (.py extension) match failed: %s", errbuf);
         return ERR;
@@ -295,7 +295,7 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
 
     // if not, attempt to open the file
 
-    if((file_pointer = fopen(resource, "r")) == NULL) {
+    if ((file_pointer = fopen(resource, "r")) == NULL) {
         print("Could not read file %s", resource);
         return NOT_FOUND;
     }
@@ -311,144 +311,144 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     //*output[file_len] = '\0';
 
     status = regexec(&txt, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("text/plain", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &txt, errbuf, 128);
         print("Regex (.txt extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&html, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("text/html", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("text/html", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &html, errbuf, 128);
         print("Regex (.html extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&htm, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("text/html", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("text/html", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &htm, errbuf, 128);
         print("Regex (.htm extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&gif, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("image/gif", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("image/gif", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &gif, errbuf, 128);
         print("Regex (.gif extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&png, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("image/png", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("image/png", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &png, errbuf, 128);
         print("Regex (.png extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&jpeg, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("image/jpeg", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("image/jpeg", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &jpeg, errbuf, 128);
         print("Regex (.jpeg extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&jpg, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("image/jpeg", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("image/jpeg", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &jpg, errbuf, 128);
         print("Regex (.jpg extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&mpeg, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("video/mpeg", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("video/mpeg", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &mpeg, errbuf, 128);
         print("Regex (.mpeg extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&mpg, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("video/mpeg", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("video/mpeg", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &mpg, errbuf, 128);
         print("Regex (.mpg extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&docx, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("application/msword", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("application/msword", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &docx, errbuf, 128);
         print("Regex (.docx extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&doc, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("application/msword", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("application/msword", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &doc, errbuf, 128);
         print("Regex (.doc extension) match failed: %s", errbuf);
         return ERR;
     }
 
     status = regexec(&pdf, resource, 0, NULL, 0);
-    if(!status) {
-        if(fill_content_type("application/pdf", contenttype) != ERR) {
+    if (!status) {
+        if (fill_content_type("application/pdf", contenttype) != ERR) {
             *check_flag = 1;
         }
         return file_len;
-    } else if(status != REG_NOMATCH) {
+    } else if (status != REG_NOMATCH) {
         regerror(status, &pdf, errbuf, 128);
         print("Regex (.pdf extension) match failed: %s", errbuf);
         return ERR;

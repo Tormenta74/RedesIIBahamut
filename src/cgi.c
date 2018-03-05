@@ -13,13 +13,13 @@
 #define R 0
 #define W 1
 
-#define	PARENT_READ     readpipe[R]
-#define	CHILD_WRITE     readpipe[W]
+#define PARENT_READ     readpipe[R]
+#define CHILD_WRITE     readpipe[W]
 #define CHILD_READ      writepipe[R]
-#define PARENT_WRITE	writepipe[W]
+#define PARENT_WRITE    writepipe[W]
 
 /*
- * Description: Executes in a child process the "program" interpreter with the "resource" script, 
+ * Description: Executes in a child process the "program" interpreter with the "resource" script,
  *              providing "input" of length "inlen" through the child's redirected stdi/o. It's
  *              the responsability of the caller to free the memory reserved for "output".
  *
@@ -44,13 +44,13 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
     //
 
     status = pipe(writepipe);
-    if(status) {
+    if (status) {
         print("pipe failed.");
         return ERR;
     }
 
     status = pipe(readpipe);
-    if(status) {
+    if (status) {
         print("pipe failed.");
         return ERR;
     }
@@ -61,7 +61,7 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
 
     pid = fork();
 
-    if(pid == 0) {
+    if (pid == 0) {
 
         //
         // am child, yo
@@ -100,7 +100,7 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
 
         bzero(aux, MAX_SCRIPT_LINE_OUTPUT);
 
-        while((nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT)) >= 0) {
+        while ((nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT)) >= 0) {
             sprintf(aux, "%s%s", aux, buffer);
             output_size += nread;
 
@@ -110,7 +110,7 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
             // Sigh.
             //
             // "\r\n" afterwards means the script sent a line with just that
-            if(strstr(buffer, "\n\r\n") != NULL
+            if (strstr(buffer, "\n\r\n") != NULL
                     || strstr(buffer, "\000\r\n") != NULL) {
                 break;
             }
