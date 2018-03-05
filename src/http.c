@@ -297,7 +297,7 @@ int http_response_build(char** buffer, int version, int rescode, char *resp, siz
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
-    sprintf(buffer, "%s", buf);
+    sprintf(*buffer, "%s", buf);
 
     return OK;
 }

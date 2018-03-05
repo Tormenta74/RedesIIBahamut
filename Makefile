@@ -33,7 +33,7 @@ SERVER = server
 
 # core target of the makefile
 
-TARGET = $(TESTSCRIPTS)
+TARGET = $(SERVER)
 
 # cleaning targets
 

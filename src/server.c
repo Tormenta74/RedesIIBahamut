@@ -69,7 +69,7 @@ int process_request(char *buf, size_t buflen, char *response) {
             return ERR;
         }
 
-        status = http_response_build(response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
         if (status == ERR) {
             print("Error while creating GET response.");
             return ERR;
@@ -99,7 +99,7 @@ int process_request(char *buf, size_t buflen, char *response) {
             return ERR;
         }
 
-        status = http_response_build(response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
         if (status == ERR) {
             print("Error while creating POST response.");
             return ERR;
@@ -116,7 +116,7 @@ int process_request(char *buf, size_t buflen, char *response) {
             return ERR;
         }
 
-        status = http_response_build(response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
+        status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
         if (status == ERR) {
             print("Error while creating OPTIONS response.");
             return ERR;
@@ -128,7 +128,7 @@ int process_request(char *buf, size_t buflen, char *response) {
     return OK;
 }
 
-void error_response(int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
+void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
     char *response;
@@ -138,7 +138,7 @@ void error_response(int errcode, char *err, size_t errlen, char *err_extended, i
 
     sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
 
-    http_response_build(&response, 1, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
+    http_response_build(&response, version, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
 
     if (tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
@@ -161,7 +161,7 @@ void error_response(int errcode, char *err, size_t errlen, char *err_extended, i
  * int sockfd: file descriptor of bad requester socket
  */
 void ill_formed_request(int sockfd) {
-    error_response(400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", sockfd);
+    error_response(1, 400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", sockfd);
 }
 
 /*
@@ -170,8 +170,8 @@ void ill_formed_request(int sockfd) {
  * In:
  * int sockfd: file descriptor of way too entitled socket
  */
-void unsupported_verb(int sockfd) {
-    error_response(501, "Not Implemented", 15, "This method is not implemented by the server.", sockfd);
+void unsupported_verb(int sockfd, int version) {
+    error_response(version, 501, "Not Implemented", 15, "This method is not implemented by the server.", sockfd);
 }
 
 /*
@@ -179,8 +179,8 @@ void unsupported_verb(int sockfd) {
  *
  * In: int sockfd: file descriptor of way too entitled socket
  */
-void resource_not_found(int sockfd) {
-    error_response(404, "Not Found", 9, "The server has not found any resource matching the request URI.", sockfd);
+void resource_not_found(int sockfd, int version) {
+    error_response(version, 404, "Not Found", 9, "The server has not found any resource matching the request URI.", sockfd);
 }
 
 /*
@@ -188,8 +188,8 @@ void resource_not_found(int sockfd) {
  *
  * In: int sockfd: file descriptor of way too entitled socket
  */
-void unsupported_media_type(int sockfd) {
-    error_response(415, "Unsupported Media Type", 22, "The requested resource has a media type not supported by the server.", sockfd);
+void unsupported_media_type(int sockfd, int version) {
+    error_response(version, 415, "Unsupported Media Type", 22, "The requested resource has a media type not supported by the server.", sockfd);
 }
 
 /*
@@ -527,7 +527,7 @@ void *serve_http(void *args) {
         } else {
             print("Client sent a %s request.", rd.method);
             // send standard response
-            unsupported_verb(sockfd);
+            unsupported_verb(sockfd, rd.version);
 
             tcp_close_socket(sockfd);
 
@@ -544,9 +544,9 @@ void *serve_http(void *args) {
         case GET:
             status = get(sockfd, &rd);
             if (status == NOT_FOUND) {
-                resource_not_found(sockfd);
+                resource_not_found(sockfd, rd.version);
             } else if (status == NO_MATCH) {
-                unsupported_media_type(sockfd);
+                unsupported_media_type(sockfd, rd.version);
             } else if (status == ERR) {
                 print("GET processing failed.");
                 goto end_serve_http;
@@ -555,9 +555,9 @@ void *serve_http(void *args) {
         case POST:
             status = post(sockfd, &rd);
             if (status == NOT_FOUND) {
-                resource_not_found(sockfd);
+                resource_not_found(sockfd, rd.version);
             } else if (status == NO_MATCH) {
-                unsupported_media_type(sockfd);
+                unsupported_media_type(sockfd, rd.version);
             } else if (status == ERR) {
                 print("POST processing failed.");
                 goto end_serve_http;
