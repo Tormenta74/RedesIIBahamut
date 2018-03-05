@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         return ERR;
     }
 
-    if(flag == NO_CTYPE) {
+    if(flag == NO_MATCH) {
         printf("Script \"%s\" with input \"%s\" returned:\n(no ContentType) %s\n",
                 argv[1], argv[2], out);
     } else {

@@ -131,13 +131,14 @@ int process_request(char *buf, size_t buflen, char *response) {
 void error_response(int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
-    char response[MAX_CHAR], body[MAX_CHAR];
+    char *response;
+    char body[MAX_CHAR];
 
     header_build(so, NULL, NULL, 0, 0, 0, res_headers, &num_headers);
 
     sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
 
-    http_response_build(response, 1, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
+    http_response_build(&response, 1, errcode, err, errlen, num_headers, res_headers, body, strlen(body));
 
     if (tcp_send(sockfd, (const void*)response, strlen(response)) < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
@@ -149,6 +150,8 @@ void error_response(int errcode, char *err, size_t errlen, char *err_extended, i
 
         conc_exit();
     }
+
+    free(response);
 }
 
 /*
@@ -199,7 +202,7 @@ int get(int sockfd, struct http_req_data *rd) {
     int status, num_headers, check_flag, response_len;
     long file_len;
     struct http_pairs res_headers[MAX_HEADERS];
-    char real_path[MAX_CHAR], *response = NULL;
+    char real_path[MAX_CHAR], *response = NULL, *response_aux;
     char *path_aux, *args_aux, *file_content, *content_type;
     size_t args_len;
 
@@ -229,7 +232,7 @@ int get(int sockfd, struct http_req_data *rd) {
         return ERR;
     }
 
-    status = http_response_build(response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    status = http_response_build(&response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
     if (status == ERR) {
         print("Error while creating GET response.");
         if (args_len != 0) {
@@ -241,10 +244,11 @@ int get(int sockfd, struct http_req_data *rd) {
 
     // TO BE MODIFIED
     response_len = strlen(response);
+    response_aux = response;
     status = 0;
 
     do {
-        status = tcp_send(sockfd, (const void *)(response + status), response_len - status);
+        status = tcp_send(sockfd, (const void *)(response_aux + status), response_len - status);
         if (status < 0) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
@@ -262,9 +266,11 @@ int get(int sockfd, struct http_req_data *rd) {
 
             return ERR;
         }
-        response += status;
+        response_aux += status;
         response_len -= status;
     } while (response_len > 0);
+
+    free(response);
 
     if (args_len != 0) {
         free(path_aux);
@@ -281,7 +287,7 @@ int get(int sockfd, struct http_req_data *rd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 int post(int sockfd, struct http_req_data *rd) {
-    char real_path[MAX_CHAR], *response = NULL;
+    char real_path[MAX_CHAR], *response = NULL, *response_aux;
     char *file_content, *content_type;
     long file_len;
     int check_flag, status, response_len, num_headers;
@@ -303,7 +309,7 @@ int post(int sockfd, struct http_req_data *rd) {
         return ERR;
     }
 
-    status = http_response_build(response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
+    status = http_response_build(&response, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
     if (status == ERR) {
         print("Error while creating POST response.");
         return ERR;
@@ -311,10 +317,11 @@ int post(int sockfd, struct http_req_data *rd) {
 
     // TO BE MODIFIED
     response_len = strlen(response);
+    response_aux = response;
     status = 0;
 
     do {
-        status = tcp_send(sockfd, (const void *)(response + status), response_len - status);
+        status = tcp_send(sockfd, (const void *)(response_aux + status), response_len - status);
         if (status < 0) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
@@ -327,9 +334,11 @@ int post(int sockfd, struct http_req_data *rd) {
 
             return ERR;
         }
-        response += status;
+        response_aux += status;
         response_len -= status;
     } while (response_len > 0);
+
+    free(response);
 
     return OK;
 }
@@ -343,9 +352,9 @@ int post(int sockfd, struct http_req_data *rd) {
  * int version: HTTP version
  */
 int options(int sockfd, int version) {
-    int status, num_headers;
+    int status, num_headers, response_len;
     struct http_pairs res_headers[MAX_HEADERS];
-    char response[MAX_CHAR];
+    char *response;
 
     // construct headers
     status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
@@ -355,11 +364,28 @@ int options(int sockfd, int version) {
     }
 
     // construct response
-    status = http_response_build(response, version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
+    status = http_response_build(&response, version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
     if (status == ERR) {
         print("Error while creating OPTIONS response.");
         return ERR;
     }
+
+    response_len = strlen(response);
+    status = tcp_send(sockfd, (const void *)response, response_len);
+    if (status < 0) {
+        print("could not send response (%s:%d).", __FILE__, __LINE__);
+        print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
+        conc_exit();
+
+        return ERR;
+    }
+
+    free(response);
 
     return OK;
 }

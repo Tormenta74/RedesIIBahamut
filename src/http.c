@@ -265,9 +265,13 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
  * Return:
  * ERR if there has been an error during the process, OK otherwise
  * */
-int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len) {
+int http_response_build(char** buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len) {
     int i;
     char buf[MAX_CHAR], buf_aux[MAX_CHAR];
+
+    if (resp == NULL || headers == NULL) {
+        return ERR;
+    }
 
     /* prints first line: http version, response code and response message */
     sprintf(buf, "HTTP/1.%d %d %.*s\r\n", version, rescode, (int) resp_len, resp);
@@ -287,8 +291,13 @@ int http_response_build(char* buffer, int version, int rescode, char *resp, size
         strcat(buf, buf_aux);
     }
 
-    /* generates output */
-    strcpy(buffer, buf);
+    /* allocates memory and generates output, it is the responsibility of the caller to free it */
+    *buffer = (char*)malloc(sizeof(char)*strlen(buf));
+    if (!*buffer) {
+        print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
+        return ERR;
+    }
+    sprintf(buffer, "%s", buf);
 
     return OK;
 }
