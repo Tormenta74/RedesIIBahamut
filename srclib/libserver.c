@@ -1,6 +1,7 @@
 #include <arpa/inet.h>      // INADDR_ANY
 #include <errno.h>          // errno
 #include <pthread.h>        // pthread_mutex_t
+#include <signal.h>         // signal
 #include <stdint.h>         // uintXX_t
 #include <stdio.h>
 #include <stdlib.h>         // malloc
@@ -21,6 +22,19 @@ pthread_mutex_t nconn_lock;     // mutex del set de sockets
 int n_conn;                     // número de clientes conectados
 int iter = 0;                   // bandera de modo iterativo
 fd_set active_set, read_set;    // set de sockets y set de control
+
+
+/*
+ * Description: Catches SIGINT and indicates the accept loop to end.
+ *
+ * In:
+ * int sig_no: signal number
+ */
+void handleSIGINT(int sig_no) {
+    print("Server terminated: SIGINT captured.");
+    active = 0;
+    //tcp_close_socket(conn_socket);
+}
 
 /*
  * Description: Establishes options for the server and sets the master socket.
@@ -47,6 +61,13 @@ int server_setup(struct server_options *so) {
             return ERR;
         }
     }
+
+    // signal handling
+    if((signal(SIGINT, handleSIGINT)) == SIG_ERR) {
+        print("Could not set signal handler (%s:%d).", __FILE__, __LINE__);
+        exit(ERR);
+    }
+    print("SIGINT handler set.\n");
 
     // open the master (connection) socket
     conn_socket = tcp_open_socket();
@@ -130,7 +151,7 @@ int server_accept_loop(attention_routine *fn) {
         if(tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
             print("Could not accept conection request (%s:%d).", __FILE__, __LINE__);
             print("errno (accept): %s.", strerror(errno));
-            active=0;
+            active = 0;
             return ERR;
         }
 
