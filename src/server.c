@@ -125,9 +125,21 @@ int get(int sockfd, struct http_req_data *rd) {
     file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
 
     if (file_len == NOT_FOUND) {
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
         // 404, no such resource
         return NOT_FOUND;
     } else if (file_len == NO_MATCH) {
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
         // 415, we don't know what type it is
         return NO_MATCH;
     }
@@ -139,6 +151,8 @@ int get(int sockfd, struct http_req_data *rd) {
             free(path_aux);
             free(args_aux);
         }
+        free(file_content);
+        free(content_type);
         return ERR;
     }
 
@@ -149,6 +163,8 @@ int get(int sockfd, struct http_req_data *rd) {
             free(path_aux);
             free(args_aux);
         }
+        free(file_content);
+        free(content_type);
         return ERR;
     }
 
@@ -162,29 +178,31 @@ int get(int sockfd, struct http_req_data *rd) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
 
+            if (args_len != 0) {
+                free(path_aux);
+                free(args_aux);
+            }
+            free(file_content);
+            free(content_type);
+            free(response);
+
             mutex_lock(&nconn_lock);
             n_conn--;
             mutex_unlock(&nconn_lock);
 
             conc_exit();
-
-            if (args_len != 0) {
-                free(path_aux);
-                free(args_aux);
-            }
-
-            return ERR;
         }
         response_aux += status;
         response_len -= status;
     } while (response_len > 0);
 
-    free(response);
-
     if (args_len != 0) {
         free(path_aux);
         free(args_aux);
     }
+    free(response);
+    free(file_content);
+    free(content_type);
 
     return OK;
 }
@@ -209,20 +227,28 @@ int post(int sockfd, struct http_req_data *rd) {
     file_len = finder_load(real_path, rd->body, rd->body_len, &file_content, &content_type, &check_flag);
 
     if (file_len == NOT_FOUND) {
+        free(file_content);
+        free(content_type);
         return NOT_FOUND;
     } else if (file_len == NO_MATCH) {
+        free(file_content);
+        free(content_type);
         return NO_MATCH;
     }
 
     status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
     if (status == ERR) {
         print("Error while creating headers for POST response.");
+        free(file_content);
+        free(content_type);
         return ERR;
     }
 
     status = http_response_build(&response, &response_len, rd->version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
     if (status == ERR) {
         print("Error while creating POST response.");
+        free(file_content);
+        free(content_type);
         return ERR;
     }
 
@@ -236,19 +262,23 @@ int post(int sockfd, struct http_req_data *rd) {
             print("could not send response (%s:%d).", __FILE__, __LINE__);
             print("errno (send): %s.", strerror(errno));
 
+            free(response);
+            free(file_content);
+            free(content_type);
+
             mutex_lock(&nconn_lock);
             n_conn--;
             mutex_unlock(&nconn_lock);
 
             conc_exit();
-
-            return ERR;
         }
         response_aux += status;
         response_len -= status;
     } while (response_len > 0);
 
     free(response);
+    free(file_content);
+    free(content_type);
 
     return OK;
 }
@@ -345,6 +375,7 @@ void *serve_http(void *args) {
         if ((len = tcp_receive(sockfd, receive_buffer, MAX_RECV_LEN)) == 0) {
             print("Client closing connection.");
             tcp_close_socket(sockfd);
+            http_request_data_free(&rd);
 
             // decrease nconn and exit
             mutex_lock(&nconn_lock);
@@ -357,6 +388,9 @@ void *serve_http(void *args) {
         if (len < 0) {
             print("Could not receive any data (%s:%d).", __FILE__, __LINE__);
             print("errno (receive): %s.", strerror(errno));
+
+            tcp_close_socket(sockfd);
+            http_request_data_free(&rd);
 
             // decrease nconn and exit
             mutex_lock(&nconn_lock);
@@ -413,6 +447,7 @@ void *serve_http(void *args) {
             ill_formed_request(sockfd);
 
             tcp_close_socket(sockfd);
+            http_request_data_free(&rd);
 
             // decrease nconn and exit
             mutex_lock(&nconn_lock);
@@ -440,6 +475,7 @@ void *serve_http(void *args) {
             unsupported_verb(sockfd, rd.version);
 
             tcp_close_socket(sockfd);
+            http_request_data_free(&rd);
 
             // decrease nconn and exit
             mutex_lock(&nconn_lock);
@@ -496,6 +532,7 @@ end_serve_http:
     mutex_unlock(&nconn_lock);
 
     tcp_close_socket(sockfd);
+    http_request_data_free(&rd);
 
     return NULL;
 }

@@ -199,14 +199,14 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
     }
 
     /* sets method, path, http version and number of headers */
-    rd->method = (char*)malloc(method_len*sizeof(char));
+    rd->method = (char*)malloc((method_len+1)*sizeof(char));
     if (!rd->method) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
     sprintf(rd->method, "%.*s", (int)method_len, method_aux);
 
-    rd->path = (char*)malloc(path_len*sizeof(char));
+    rd->path = (char*)malloc((path_len+1)*sizeof(char));
     if (!rd->path) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
@@ -229,7 +229,7 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
     } else {
         /* length of body calculation as (length of request) - (pointer at body - pointer at start of request) */
         body_len = buflen - (body_aux - buf);
-        rd->body = (char*)malloc(body_len*sizeof(char));
+        rd->body = (char*)malloc((body_len+1)*sizeof(char));
         rd->body_len = body_len;
         if (!rd->body) {
             print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);

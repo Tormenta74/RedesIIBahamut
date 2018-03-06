@@ -336,8 +336,8 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     // reserve enough memory for the entire file and load it
     *output = malloc(file_len);
     fread(*output, (size_t)file_len, 1, file_pointer);
-    // this breaks, and I don't fully understand why
-    //*output[file_len] = '\0';
+
+    fclose(file_pointer);
 
     status = regexec(&txt, resource, 0, NULL, 0);
     if (!status) {

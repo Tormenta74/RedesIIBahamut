@@ -117,6 +117,8 @@ int config_parse(char* filename, struct server_options *so) {
         free(line);
     }
 
+    fclose(f);
+
     return OK;
 }
 
