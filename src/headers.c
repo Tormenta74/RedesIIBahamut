@@ -93,6 +93,8 @@ char *header_last_modified(char *path) {
     int ret;
     struct stat sb;
 
+    /* stat fills structure sb with lots of info about the file with path "path",
+    including last modification time (st_mtime) */
     ret = stat(path, &sb);
     if (ret) {
         return NULL;
@@ -113,6 +115,7 @@ char *header_last_modified(char *path) {
  * char *path: path of the required resource
  * char *contenttype: string containing the content type of the required resource
  * long len: length of the required resource
+ * int res_flag: flag that indicates whether there is a resource delivered in the server response (requested or not)
  * int check_flag: flag that indicates whether the required resource exists and is available
  * int options_flag: flag that indicates if it is an OPTIONS request
  * struct http_pairs *headers: pointer to http_pairs structure to be built
@@ -140,45 +143,58 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         return ERR;
     }
 
+    /* including both headers into the structure */
     sprintf(headers[0].name, "Date");
     sprintf(headers[0].value, date_buf);
     sprintf(headers[1].name, "Server");
     sprintf(headers[1].value, server_buf);
 
+    /* sets num_headers to 2 for now */
     *num_headers = 2;
 
     /* generation of the "Allow" header in case this is a response to an OPTIONS request */
     if (options_flag == 1) {
         sprintf(headers[2].name, "Allow");
         sprintf(headers[2].value, "OPTIONS, GET, POST");
+        /* if options_flag == 1 the rest of the flags should always be 0, therefore we'll have 3 headers */
         *num_headers = 3;
     }
 
-    /* generation of the headers that provide information about the resource, in case it is available and/or needed */
+    /* res_flag indicates that there is a resource that is being sent to the client inside the response,
+    while check_flag indicates that the client has requested a resource and that resource has been found*/
     if (res_flag == 1) {
+        /* if there is a resource involved, we include Content-Type and Content-Length headers */
         sprintf(headers[2].name, "Content-Type");
         sprintf(headers[2].value, contenttype);
         sprintf(headers[3].name, "Content-Length");
         sprintf(headers[3].value, "%ld", len);
+        /* sets num_headers to 4 for now (date+server+content-type+content-length) */
         *num_headers = 4;
 
+        /* if the resource has been found, we add another header */
         if (check_flag == 1) {
+            /* we obtain the last modification time of the resource requested */
             lm_buf = header_last_modified(path);
 
             if (lm_buf == NULL) {
                 return ERR;
             }
 
+            /* we include this header into the structure */
             sprintf(headers[4].name, "Last-Modified");
             sprintf(headers[4].value, lm_buf);
+            /* if this header is included into the structure, it is because there is a resource
+            involved, so res_flag will always be activated and there will be 5 headers */
             *num_headers = 5;
 
+            /* we free the memory allocated by header_last_modified */
             if(lm_buf) {
                 free(lm_buf);
             }
         }
     }
 
+    /* we free the memory allocated by header_date and header_server */
     if(date_buf) {
         free(date_buf);
     }
