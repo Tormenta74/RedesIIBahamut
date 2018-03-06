@@ -29,16 +29,6 @@ extern int n_conn;                  // server.c
 struct server_options so;
 int tout_seconds;
 
-int way_out() {
-    if (so.iterative == 1) {
-        return OK;
-    } else {
-        conc_exit();
-    }
-    
-    return ERR;
-}
-
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];

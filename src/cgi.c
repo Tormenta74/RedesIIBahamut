@@ -114,7 +114,8 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
 
         // but I tell ya, I'm busy!
 
-        timeout.tv_sec = 3;
+        timeout.tv_sec = wait_s;
+        timeout.tv_usec = 0;
 
         bzero(aux, MAX_SCRIPT_LINE_OUTPUT);
 
@@ -136,7 +137,7 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
             // now I have to end you
             kill(pid, SIGTERM);
 
-            return ERR;
+            return TIMEOUT;
 
         } else {
             //nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT);

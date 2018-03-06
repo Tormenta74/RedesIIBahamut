@@ -132,7 +132,15 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
 
     /* generation of the two headers that are always part of the response regardless of its method */
     date_buf = header_date();
+    if(!date_buf) {
+        print("headers: Failed to write the date buffer.");
+        return ERR;
+    }
     server_buf = header_server(so);
+    if(!server_buf) {
+        print("headers: Failed to write the servername buffer.");
+        return ERR;
+    }
 
     sprintf(headers[0].name, "Date");
     sprintf(headers[0].value, date_buf);
