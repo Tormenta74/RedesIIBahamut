@@ -123,13 +123,13 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
 
         sret = select(PARENT_READ + 1, &microset, NULL, NULL, &timeout);
         //sret = select(PARENT_READ + 1, &microset, NULL, NULL, NULL);
-        if(sret == -1) {
+        if (sret == -1) {
 
             // oh boy
             print("cgi: Error selecting on the child stdout.");
             return ERR;
 
-        } else if(sret == 0) {
+        } else if (sret == 0) {
 
             // too late, son
             print("cgi: Script timed out.");

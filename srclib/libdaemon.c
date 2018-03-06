@@ -23,11 +23,11 @@ int daemonize(const char *proc_name, const char *root_path) {
     pid_t pid = fork();
 
     // the parent code: exit inmediately
-    if(pid > 0) {
+    if (pid > 0) {
         exit(OK);
     }
     // if fork returned a negative number, there is an error
-    if(pid < 0) {
+    if (pid < 0) {
         exit(ERR);
     }
 
@@ -39,20 +39,20 @@ int daemonize(const char *proc_name, const char *root_path) {
     openlog(proc_name, LOG_CONS|LOG_PID|LOG_NDELAY, LOG_LOCAL3);
 
     // create a new session for the process
-    if(setsid() < 0) {
+    if (setsid() < 0) {
         print("Error creating session for the server.");
         return ERR;
     }
 
     // change current directory
-    if((chdir(root_path)) < 0) {
+    if ((chdir(root_path)) < 0) {
         print("Error changing directory to \"%s\".", root_path);
         return ERR;
     }
 
     // close all file descriptors
     int i, ts = getdtablesize();
-    for(i=0; i<ts; i++) {
+    for (i=0; i<ts; i++) {
         close(i);
     }
 

@@ -29,14 +29,14 @@ void *echo (void* args) {
     print("echo: handling socket %d.", sock);
     free(args); // done
 
-    if(sock <= 0) {
+    if (sock <= 0) {
         print("Wrong parameters for socket. (%s:%d).", __FILE__, __LINE__);
         conc_exit(NULL);
     }
 
     bzero(buffer, 1024);
 
-    if((len = tcp_receive(sock, buffer, 1024)) == 0) {
+    if ((len = tcp_receive(sock, buffer, 1024)) == 0) {
         print("Client closing connection.");
         tcp_close_socket(sock);
 
@@ -47,7 +47,7 @@ void *echo (void* args) {
         conc_exit();
     }
 
-    if(len < 0) {
+    if (len < 0) {
         print("Could not receive any data (%s:%d).", __FILE__, __LINE__);
         print("errno (receive): %s.", strerror(errno));
 
@@ -60,7 +60,7 @@ void *echo (void* args) {
 
     print("Received %d bytes.", len);
 
-    if(tcp_send(sock, (const void*)buffer, strlen(buffer)) < 0) {
+    if (tcp_send(sock, (const void*)buffer, strlen(buffer)) < 0) {
         print("could not send pong back (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
 
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     /* Ejemplo de uso de las funciones de server */
 
-    if((signal(SIGINT, handleSIGINT)) == SIG_ERR) {
+    if ((signal(SIGINT, handleSIGINT)) == SIG_ERR) {
         printf("Could not set signal handler (%s:%d).", __FILE__, __LINE__);
         exit(ERR);
     }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     printf("Going down as 'echo_server'.\n");
 
     status = server_setup("echo_server", local_addr, local_port);
-    if(status == ERR) {
+    if (status == ERR) {
         print("Error while setting up server. Shutting down.");
         return ERR;
     }

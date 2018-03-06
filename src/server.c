@@ -152,7 +152,7 @@ int get(int sockfd, struct http_req_data *rd) {
         free(content_type);
         // 415, we don't know what type it is
         return NO_MATCH;
-    } else if(file_len == TIMEOUT) {
+    } else if (file_len == TIMEOUT) {
         // 500, script takes too long to respond
         return TIMEOUT;
     }
@@ -247,7 +247,7 @@ int post(int sockfd, struct http_req_data *rd) {
         free(file_content);
         free(content_type);
         return NO_MATCH;
-    } else if(file_len == TIMEOUT) {
+    } else if (file_len == TIMEOUT) {
         // 500, script takes too long to respond
         return TIMEOUT;
     }
@@ -535,7 +535,7 @@ void *serve_http(void *args) {
             resource_not_found(sockfd, rd.version);
         } else if (status == NO_MATCH) {
             unsupported_media_type(sockfd, rd.version);
-        } else if(status == TIMEOUT) {
+        } else if (status == TIMEOUT) {
             internal_server_error(sockfd, rd.version);
         }
 

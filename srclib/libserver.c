@@ -52,14 +52,14 @@ int server_setup(struct server_options *so) {
     int enable = 1;
 
     // sanity check
-    if(!so) {
+    if (!so) {
         print("Unallocated server_options.");
         return ERR;
     }
 
     // daemon mode option
-    if(so->daemon == 1) {
-        if(daemonize(so->server_signature, so->server_root) == ERR) {
+    if (so->daemon == 1) {
+        if (daemonize(so->server_signature, so->server_root) == ERR) {
             print("Bad daemonize.");
             return ERR;
         }
@@ -73,7 +73,7 @@ int server_setup(struct server_options *so) {
     }
 
     // signal handling
-    if((signal(SIGINT, handleSIGINT)) == SIG_ERR) {
+    if ((signal(SIGINT, handleSIGINT)) == SIG_ERR) {
         print("Could not set signal handler (%s:%d).", __FILE__, __LINE__);
         exit(ERR);
     }
@@ -81,7 +81,7 @@ int server_setup(struct server_options *so) {
 
     // open the master (connection) socket
     conn_socket = tcp_open_socket();
-    if(conn_socket == ERR) {
+    if (conn_socket == ERR) {
         print("Could not open TCP socket (%s:%d).", __FILE__, __LINE__);
         print("errno (socket): %s.", strerror(errno));
         return ERR;
@@ -89,7 +89,7 @@ int server_setup(struct server_options *so) {
     print("Connection socket opened with file descriptor %d.\n", conn_socket);
 
     // apply socket options
-    if(setsockopt(conn_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+    if (setsockopt(conn_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
         print("Could not set socket options (%s:%d).", __FILE__, __LINE__);
         print("errno (setsockopt): %s.", strerror(errno));
         return ERR;
@@ -100,22 +100,22 @@ int server_setup(struct server_options *so) {
     print("Connection port: %d.", so->listen_port);
 
     // bind the master socket to the listen port
-    if(tcp_bind_port(conn_socket, INADDR_ANY, so->listen_port)) {
-        print("Could not bind address to port (%s:%d).",__FILE__,__LINE__);
+    if (tcp_bind_port(conn_socket, INADDR_ANY, so->listen_port)) {
+        print("Could not bind address to port (%s:%d).", __FILE__, __LINE__);
         print("errno (bind): %s.", strerror(errno));
         return ERR;
     }
     print("Conection port bound successfully.");
 
     // mark socket as ready to accept new connections
-    if(tcp_listen(conn_socket, so->max_clients)) {
+    if (tcp_listen(conn_socket, so->max_clients)) {
         print("Could not set socket to listen (%s:%d).", __FILE__, __LINE__);
         print("errno (listen): %s.", strerror(errno));
         return ERR;
     }
 
     // init number of connections variable lock
-    if(mutex_init(&nconn_lock) == ERR) {
+    if (mutex_init(&nconn_lock) == ERR) {
         print("Could not init mutex (%s:%d).", __FILE__, __LINE__);
         print("errno (pthread_mutex_init): %s.", strerror(errno));
         return ERR;
@@ -148,7 +148,7 @@ int server_accept_loop(attention_routine *fn) {
     struct sockaddr_in addr;
 
 
-    while(active) {
+    while (active) {
         // inicializamos new_socket
         new_socket = 0;
 
@@ -158,7 +158,7 @@ int server_accept_loop(attention_routine *fn) {
         addr.sin_addr.s_addr = 0;
         bzero(addr.sin_zero, 8*sizeof(char));
 
-        if(tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
+        if (tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
             print("Could not accept conection request (%s:%d).", __FILE__, __LINE__);
             print("errno (accept): %s.", strerror(errno));
             active = 0;
@@ -178,10 +178,10 @@ int server_accept_loop(attention_routine *fn) {
 
         // you sneaky bastard
         mutex_lock(&nconn_lock);
-        if(++n_conn <= MAX_CLIENTS) {
+        if (++n_conn <= MAX_CLIENTS) {
             // tenemos que desbloquear inmediatamente (it iw known)
             mutex_unlock(&nconn_lock);
-            if(iter == 1) { // el servidor tiene la opción de ser iterativo
+            if (iter == 1) { // el servidor tiene la opción de ser iterativo
                 // llamamos directamente a la rutina de atención
                 fn((void*)s);
             } else {
@@ -214,14 +214,14 @@ int server_setup_old(const char* servername, uint32_t local_addr, uint16_t local
 
     /* abrimos el socket de conexiones */
     conn_socket = tcp_open_socket();
-    if(conn_socket == ERR) {
+    if (conn_socket == ERR) {
         print("Could not open TCP socket (%s:%d).", __FILE__, __LINE__);
         print("errno (socket): %s.", strerror(errno));
         return ERR;
     }
     print("Connection socket opened with file descriptor %d.\n", conn_socket);
 
-    if(setsockopt(conn_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+    if (setsockopt(conn_socket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
         print("Could not set socket options (%s:%d).", __FILE__, __LINE__);
         print("errno (setsockopt): %s.", strerror(errno));
         return ERR;
@@ -234,21 +234,21 @@ int server_setup_old(const char* servername, uint32_t local_addr, uint16_t local
     print("Connection port: %d.", local_port);
 
     /* bind */
-    if(tcp_bind_port(conn_socket, local_addr, local_port)) {
-        print("Could not bind address to port (%s:%d).",__FILE__,__LINE__);
+    if (tcp_bind_port(conn_socket, local_addr, local_port)) {
+        print("Could not bind address to port (%s:%d).", __FILE__, __LINE__);
         print("errno (bind): %s.", strerror(errno));
         return ERR;
     }
     print("Conection port bound successfully.");
 
     /* escucha */
-    if(tcp_listen(conn_socket, 128)) {
+    if (tcp_listen(conn_socket, 128)) {
         print("Could not set socket to listen (%s:%d).", __FILE__, __LINE__);
         print("errno (listen): %s.", strerror(errno));
         return ERR;
     }
 
-    if(mutex_init(&nconn_lock) == ERR) {
+    if (mutex_init(&nconn_lock) == ERR) {
         print("Could not init mutex (%s:%d).", __FILE__, __LINE__);
         print("errno (pthread_mutex_init): %s.", strerror(errno));
         return ERR;
@@ -269,16 +269,16 @@ int server_accept_loop_old(attention_routine *fn) {
     addr.sin_family=0;
     addr.sin_port=0;
     addr.sin_addr.s_addr=0;
-    bzero(addr.sin_zero,8*sizeof(char));
+    bzero(addr.sin_zero, 8*sizeof(char));
 
-    while(active) {
+    while (active) {
         mutex_lock(&nconn_lock);
         read_set = active_set;
         mutex_unlock(&nconn_lock);
 
         print("Selecting.");
 
-        if(select(n_conn, &read_set, NULL, NULL, NULL) < 0) {
+        if (select(n_conn, &read_set, NULL, NULL, NULL) < 0) {
             print("Error while listening to the sockets (%s:%d).", __FILE__, __LINE__);
             print("errno (select): %s.", strerror(errno));
             active = 0;
@@ -287,11 +287,11 @@ int server_accept_loop_old(attention_routine *fn) {
 
         print("He salío de select.");
 
-        for(i=0; i<FD_SETSIZE; i++) {
-            if(FD_ISSET(i,&read_set) && i == conn_socket) {
+        for (i=0; i<FD_SETSIZE; i++) {
+            if (FD_ISSET(i, &read_set) && i == conn_socket) {
                 new_socket=0;
 
-                if(tcp_accept(conn_socket,&new_socket,&addr) || new_socket == ERR) {
+                if (tcp_accept(conn_socket, &new_socket, &addr) || new_socket == ERR) {
                     print("Could not accept conection request (%s:%d).", __FILE__, __LINE__);
                     print("errno (accept): %s.", strerror(errno));
                     active=0;
@@ -303,7 +303,7 @@ int server_accept_loop_old(attention_routine *fn) {
                 print("Conection accepted: redirected to socket %d.", new_socket);
 
                 mutex_lock(&nconn_lock);
-                FD_SET(new_socket,&active_set);
+                FD_SET(new_socket, &active_set);
                 mutex_unlock(&nconn_lock);
                 n_conn = new_socket+1;
 
@@ -311,11 +311,10 @@ int server_accept_loop_old(attention_routine *fn) {
                 addr.sin_port = 0;
                 addr.sin_addr.s_addr = 0;
                 bzero(addr.sin_zero, 8*sizeof(char));
-            }
-            else if(FD_ISSET(i, &read_set)) {
+            } else if (FD_ISSET(i, &read_set)) {
                 int* s = malloc(sizeof(int));
                 *s = i;
-                conc_launch(fn,(void*)s);
+                conc_launch(fn, (void*)s);
             }
         }
     }
