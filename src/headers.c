@@ -27,7 +27,7 @@ char *date_generator(time_t *t) {
     time_t rawtime;
     struct tm *timeinfo;
     size_t nformatted;
-    char buffer[128], *output;
+    char buffer[128];
 
     /* checks the argument to determine which date is needed */
     if (t != NULL) {
@@ -47,9 +47,7 @@ char *date_generator(time_t *t) {
     }
 
     /* allocation for the string, which must be freed by the caller */
-    output = strndup(buffer, nformatted);
-
-    return output;
+    return strndup(buffer, nformatted);
 }
 
 /****************************************************************
