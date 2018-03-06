@@ -11,7 +11,7 @@
 #include "libtcp.h"
 #include "libconcurrent.h"
 #include "config.h"
-#include "config.h"
+#include "cgi.h"
 #include "finder.h"
 #include "picohttpparser.h"
 #include "headers.h"
@@ -65,7 +65,35 @@ void error_response(int version, int errcode, char *err, size_t errlen, char *er
  * int sockfd: file descriptor of bad requester socket
  */
 void ill_formed_request(int sockfd) {
-    error_response(1, 400, "Bad Request", 11, "The server could not understand the request due to malformed syntax.", sockfd);
+    error_response(1, 400, "Bad Request", 12, "The server could not understand the request due to malformed syntax.", sockfd);
+}
+
+/*
+ * Description: Sends the 404 error code response, including an HTML page.
+ *
+ * In: int sockfd: file descriptor of way too entitled socket
+ */
+void resource_not_found(int sockfd, int version) {
+    error_response(version, 404, "Not Found", 10, "The server has not found any resource matching the request URI.", sockfd);
+}
+
+/*
+ * Description: Sends the 415 error code response, including an HTML page.
+ *
+ * In: int sockfd: file descriptor of way too entitled socket
+ */
+void unsupported_media_type(int sockfd, int version) {
+    error_response(version, 415, "Unsupported Media Type", 23, "The requested resource has a media type not supported by the server.", sockfd);
+}
+
+/*
+ * Description: Sends the 501 error code response, including an HTML page.
+ *
+ * In:
+ * int sockfd: file descriptor of way too entitled socket
+ */
+void internal_server_error(int sockfd, int version) {
+    error_response(version, 500, "Internal Server Error", 23, "There was an error processing the request.", sockfd);
 }
 
 /*
@@ -75,25 +103,7 @@ void ill_formed_request(int sockfd) {
  * int sockfd: file descriptor of way too entitled socket
  */
 void unsupported_verb(int sockfd, int version) {
-    error_response(version, 501, "Not Implemented", 15, "This method is not implemented by the server.", sockfd);
-}
-
-/*
- * Description: Sends the 404 error code response, including an HTML page.
- *
- * In: int sockfd: file descriptor of way too entitled socket
- */
-void resource_not_found(int sockfd, int version) {
-    error_response(version, 404, "Not Found", 9, "The server has not found any resource matching the request URI.", sockfd);
-}
-
-/*
- * Description: Sends the 415 error code response, including an HTML page.
- *
- * In: int sockfd: file descriptor of way too entitled socket
- */
-void unsupported_media_type(int sockfd, int version) {
-    error_response(version, 415, "Unsupported Media Type", 22, "The requested resource has a media type not supported by the server.", sockfd);
+    error_response(version, 501, "Not Implemented", 16, "This method is not implemented by the server.", sockfd);
 }
 
 /*
@@ -130,6 +140,9 @@ int get(int sockfd, struct http_req_data *rd) {
     } else if (file_len == NO_MATCH) {
         // 415, we don't know what type it is
         return NO_MATCH;
+    } else if(file_len == TIMEOUT) {
+        // 500, script takes too long to respond
+        return TIMEOUT;
     }
 
     status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
@@ -212,7 +225,11 @@ int post(int sockfd, struct http_req_data *rd) {
         return NOT_FOUND;
     } else if (file_len == NO_MATCH) {
         return NO_MATCH;
+    } else if(file_len == TIMEOUT) {
+        // 500, script takes too long to respond
+        return TIMEOUT;
     }
+
 
     status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
     if (status == ERR) {
@@ -482,6 +499,8 @@ void *serve_http(void *args) {
             resource_not_found(sockfd, rd.version);
         } else if (status == NO_MATCH) {
             unsupported_media_type(sockfd, rd.version);
+        } else if(status == TIMEOUT) {
+            internal_server_error(sockfd, rd.version);
         }
 
         // we have processed: begin again (if the client is still there)

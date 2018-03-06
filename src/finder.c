@@ -270,9 +270,9 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
             // failed to execute
             return ERR;
         }
-        if(file_len == TIMEOUT) {
+        if (file_len == TIMEOUT) {
             // TODO: propagate timeout and communicate 500 internal server error
-            return NOT_FOUND;
+            return TIMEOUT;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
@@ -293,9 +293,9 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
             // failed to execute
             return ERR;
         }
-        if(file_len == TIMEOUT) {
+        if (file_len == TIMEOUT) {
             // TODO: propagate timeout and communicate 500 internal server error
-            return NOT_FOUND;
+            return TIMEOUT;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
@@ -311,8 +311,8 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     // check that we did not request a directory
 
     struct stat s;
-    if(stat(resource, &s) == OK) {
-        if(s.st_mode & S_IFDIR) {
+    if (stat(resource, &s) == OK) {
+        if (s.st_mode & S_IFDIR) {
             print("finder: %s is a directory", resource);
             return NOT_FOUND;
         }
