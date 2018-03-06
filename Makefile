@@ -32,6 +32,8 @@ FILES = file
 SERVER = server
 
 # core target of the makefile
+# change this variable to produce one of the targets
+# listed as main or test main
 
 TARGET = $(SERVER)
 

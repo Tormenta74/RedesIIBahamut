@@ -197,7 +197,6 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
 
     /* we free the memory allocated by header_date and header_server */
     if (date_buf) {
-    if(date_buf) {
         free(date_buf);
     }
 

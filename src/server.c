@@ -19,8 +19,10 @@
 #include "server.h"
 
 #define GET     1000
-#define POST    1001
-#define OPTIONS 1002
+#define HEAD    1001
+#define POST    1002
+#define OPTIONS 1003
+
 
 extern int active;                  // server.c
 extern pthread_mutex_t nconn_lock;  // server.c
@@ -28,6 +30,10 @@ extern int n_conn;                  // server.c
 
 struct server_options so;
 int tout_seconds;
+
+/*****************************************************************
+ * AUXILIARY FUNCTIONS
+ *****************************************************************/
 
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
@@ -58,6 +64,12 @@ void error_response(int version, int errcode, char *err, size_t errlen, char *er
     free(response);
 }
 
+/*****************************************************************
+ * ERROR CODES IMPLEMENTATIONS
+ * This functions send a prebuilt response when an error occurs
+ * (See the relevant HTTP status codes)
+ *****************************************************************/
+
 /*
  * Description: Sends the 400 error code response, including an HTML page.
  *
@@ -80,7 +92,7 @@ void resource_not_found(int sockfd, int version) {
 /*
  * Description: Sends the 415 error code response, including an HTML page.
  *
- * In: int sockfd: file descriptor of way too entitled socket
+ * In: int sockfd: file descriptor of extra picky socket
  */
 void unsupported_media_type(int sockfd, int version) {
     error_response(version, 415, "Unsupported Media Type", 23, "The requested resource has a media type not supported by the server.", sockfd);
@@ -90,7 +102,7 @@ void unsupported_media_type(int sockfd, int version) {
  * Description: Sends the 501 error code response, including an HTML page.
  *
  * In:
- * int sockfd: file descriptor of way too entitled socket
+ * int sockfd: file descriptor of very intransigent socket
  */
 void internal_server_error(int sockfd, int version) {
     error_response(version, 500, "Internal Server Error", 23, "There was an error processing the request.", sockfd);
@@ -100,11 +112,15 @@ void internal_server_error(int sockfd, int version) {
  * Description: Sends the 501 error code response, including an HTML page.
  *
  * In:
- * int sockfd: file descriptor of way too entitled socket
+ * int sockfd: file descriptor of weird speech socket
  */
 void unsupported_verb(int sockfd, int version) {
     error_response(version, 501, "Not Implemented", 16, "This method is not implemented by the server.", sockfd);
 }
+
+/*****************************************************************
+ * MAIN VERBS PROCESSING
+ *****************************************************************/
 
 /*
  * Description: GET request processing.
@@ -213,6 +229,123 @@ int get(int sockfd, struct http_req_data *rd) {
         free(path_aux);
         free(args_aux);
     }
+    free(response);
+    free(file_content);
+    free(content_type);
+
+    return OK;
+}
+
+/*
+ * Description: HEAD request processing.
+ *
+ * In:
+ * int sockfd: file descriptor of way too entitled socket
+ */
+int head(int sockfd, struct http_req_data *rd) {
+    int status, num_headers, check_flag;
+    long file_len;
+    struct http_pairs res_headers[MAX_HEADERS];
+    char real_path[MAX_CHAR];
+    char *path_aux, *args_aux, *content_type;
+    void *response, *response_aux, *file_content;
+    size_t args_len, response_len;
+
+    status = http_request_get_split(rd->path, rd->path_len, &path_aux, &args_aux, &args_len);
+    if (status == ERR) {
+        print("Error while splitting path in GET request.");
+        return ERR;
+    }
+
+    // concat server path with resource path
+    strcpy(real_path, so.server_root);
+    strcat(real_path, path_aux);
+
+    // attempt to read / exec
+    file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
+
+    if (file_len == NOT_FOUND) {
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
+        // 404, no such resource
+        return NOT_FOUND;
+    } else if (file_len == NO_MATCH) {
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
+        // 415, we don't know what type it is
+        return NO_MATCH;
+    } else if (file_len == TIMEOUT) {
+        // 500, script takes too long to respond
+        return TIMEOUT;
+    }
+
+    status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
+    if (status == ERR) {
+        print("Error while creating headers for GET response.");
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
+        return ERR;
+    }
+
+    // reuse the response_build functionality: instead, we pass an empty body
+
+    status = http_response_build(&response, &response_len, rd->version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
+    if (status == ERR) {
+        print("Error while creating GET response.");
+        if (args_len != 0) {
+            free(path_aux);
+            free(args_aux);
+        }
+        free(file_content);
+        free(content_type);
+        return ERR;
+    }
+
+    // TO BE MODIFIED
+    response_aux = response;
+    status = 0;
+
+    do {
+        status = tcp_send(sockfd, (const void *)(response_aux + status), (int)response_len - status);
+        if (status < 0) {
+            print("could not send response (%s:%d).", __FILE__, __LINE__);
+            print("errno (send): %s.", strerror(errno));
+
+            if (args_len != 0) {
+                free(path_aux);
+                free(args_aux);
+            }
+            free(file_content);
+            free(content_type);
+            free(response);
+
+            mutex_lock(&nconn_lock);
+            n_conn--;
+            mutex_unlock(&nconn_lock);
+
+            conc_exit();
+        }
+        response_aux += status;
+        response_len -= status;
+    } while (response_len > 0);
+
+    if (args_len != 0) {
+        free(path_aux);
+        free(args_aux);
+    }
+
     free(response);
     free(file_content);
     free(content_type);
@@ -347,6 +480,10 @@ int options(int sockfd, int version) {
     return OK;
 }
 
+/*****************************************************************
+ * MAIN FUNCTIONS
+ *****************************************************************/
+
 void *serve_http(void *args) {
     // get the information right away
     int sockfd = *(int*)args;
@@ -473,7 +610,7 @@ void *serve_http(void *args) {
             conc_exit();
         }
 
-        // mark connection as short lived
+        // mark connection as short lived if HTTP version is 1.0
         if (rd.version == 0) {
             client_alive = 0;
         }
@@ -482,6 +619,8 @@ void *serve_http(void *args) {
         int verb;
         if (strcmp(rd.method, "GET") == 0) {
             verb = GET;
+        } else if (strcmp(rd.method, "HEAD") == 0) {
+            verb = HEAD;
         } else if (strcmp(rd.method, "POST") == 0) {
             verb = POST;
         } else if (strcmp(rd.method, "OPTIONS") == 0) {
@@ -506,6 +645,13 @@ void *serve_http(void *args) {
         switch (verb) {
         case GET:
             status = get(sockfd, &rd);
+            if (status == ERR) {
+                print("GET processing failed.");
+                goto end_serve_http;
+            }
+            break;
+        case HEAD:
+            status = head(sockfd, &rd);
             if (status == ERR) {
                 print("GET processing failed.");
                 goto end_serve_http;
@@ -555,6 +701,11 @@ end_serve_http:
 
     return NULL;
 }
+
+/*******************************
+ * CLEANUP FUNCTIONS
+ * Compatible with atexit call.
+ *******************************/
 
 void clean_server_options() {
     config_free(&so);

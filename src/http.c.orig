@@ -88,7 +88,7 @@ int http_response_body(char *buf, char **body) {
         sprintf(sequence, "%.*s", 4, pointer);
         /* then, we increase "pointer" to point to the next character of the buffer */
         pointer++;
-        /* if we encounter "\r\n\r\n" or '\0' we have finished our duty */
+    /* if we encounter "\r\n\r\n" or '\0' we have finished our duty */
     } while (strcmp(sequence, "\r\n\r\n")!=0 && *pointer!='\0');
 
     /* if the loop has been exited due to finding the character '\0', the request was not built correctly
