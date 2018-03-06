@@ -36,9 +36,9 @@ void error_response(int version, int errcode, char *err, size_t errlen, char *er
     void *response;
     size_t response_len;
 
-    header_build(so, NULL, NULL, 0, 0, 0, res_headers, &num_headers);
-
     sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
+
+    header_build(so, NULL, "text/html", (long)strlen(body), 1, 0, 0, res_headers, &num_headers);
 
     http_response_build(&response, &response_len, version, errcode, err, errlen, num_headers, res_headers, (void *)body, strlen(body));
 
@@ -132,7 +132,7 @@ int get(int sockfd, struct http_req_data *rd) {
         return NO_MATCH;
     }
 
-    status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+    status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
     if (status == ERR) {
         print("Error while creating headers for GET response.");
         if (args_len != 0) {
@@ -214,7 +214,7 @@ int post(int sockfd, struct http_req_data *rd) {
         return NO_MATCH;
     }
 
-    status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
+    status = header_build(so, real_path, content_type, file_len, check_flag, check_flag, 0, res_headers, &num_headers);
     if (status == ERR) {
         print("Error while creating headers for POST response.");
         return ERR;
@@ -268,7 +268,7 @@ int options(int sockfd, int version) {
     size_t response_len;
 
     // construct headers
-    status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
+    status = header_build(so, NULL, NULL, 0, 0, 0, 1, res_headers, &num_headers);
     if (status == ERR) {
         print("Error while creating headers for OPTIONS response.");
         return ERR;
@@ -514,7 +514,7 @@ int main(int argc, char *argv[]) {
     } else {
         status = config_parse(argv[1], &so);
     }
-    
+
     // tout_seconds = so->timeout;
     tout_seconds = 3;
 

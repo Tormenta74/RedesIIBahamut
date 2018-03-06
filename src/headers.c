@@ -123,7 +123,7 @@ char *header_last_modified(char *path) {
  * Return:
  * ERR if there has been any error during the process, OK otherwise
  * */
-int header_build(struct server_options so, char *path, char *contenttype, long len, int check_flag, int options_flag, struct http_pairs *headers, int *num_headers) {
+int header_build(struct server_options so, char *path, char *contenttype, long len, int res_flag, int check_flag, int options_flag, struct http_pairs *headers, int *num_headers) {
     char *date_buf = NULL, *server_buf = NULL, *lm_buf = NULL;
 
     if (num_headers == NULL || headers == NULL) {
@@ -148,25 +148,28 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         *num_headers = 3;
     }
 
-    // this is not exactly accurate: remember the error codes also have to do this
-    /* generation of the headers that provide information about the resource, in case it is available */
-    if (check_flag == 1) {
-        lm_buf = header_last_modified(path);
-
-        if (lm_buf == NULL) {
-            return ERR;
-        }
-
+    /* generation of the headers that provide information about the resource, in case it is available and/or needed */
+    if (res_flag == 1) {
         sprintf(headers[2].name, "Content-Type");
         sprintf(headers[2].value, contenttype);
         sprintf(headers[3].name, "Content-Length");
         sprintf(headers[3].value, "%ld", len);
-        sprintf(headers[4].name, "Last-Modified");
-        sprintf(headers[4].value, lm_buf);
+        *num_headers = 4;
 
-        *num_headers = 5;
-        if(lm_buf) {
-            free(lm_buf);
+        if (check_flag == 1) {
+            lm_buf = header_last_modified(path);
+
+            if (lm_buf == NULL) {
+                return ERR;
+            }
+
+            sprintf(headers[4].name, "Last-Modified");
+            sprintf(headers[4].value, lm_buf);
+            *num_headers = 5;
+
+            if(lm_buf) {
+                free(lm_buf);
+            }
         }
     }
 
