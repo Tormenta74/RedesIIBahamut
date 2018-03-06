@@ -22,111 +22,11 @@
 #define POST    1001
 #define OPTIONS 1002
 
+extern int active;                  // server.c
 extern pthread_mutex_t nconn_lock;  // server.c
 extern int n_conn;                  // server.c
 
 struct server_options so;
-
-// int process_request(char *buf, size_t buflen, char *response) {
-//     int status, num_headers;
-//     struct http_pairs res_headers[MAX_HEADERS];
-//     struct http_req_data rd;
-//     char real_path[MAX_CHAR];
-//     char *path_aux, *args_aux, *file_content, *content_type;
-//     size_t args_len;
-//     int check_flag;
-//     long file_len;
-//
-//     status = http_request_parse(buf, buflen, &rd);
-//
-//     http_request_data_print(&rd);
-//
-//     if (status == ERR) {
-//         print("Error when processing request.");
-//         return ERR;
-//     }
-//
-//     // GET
-//     if (strcmp(rd.method, "GET") == 0) {
-//         status = http_request_get_split(rd.path, rd.path_len, &path_aux, &args_aux, &args_len);
-//         if (status == ERR) {
-//             print("Error while splitting path in GET request.");
-//             return ERR;
-//         }
-//
-//         status = finder_setup();
-//         if (status == ERR) {
-//             print("finder_setup failure.");
-//             return ERR;
-//         }
-//         strcpy(real_path, so.server_root);
-//         strcat(real_path, path_aux);
-//         file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
-//
-//         status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
-//         if (status == ERR) {
-//             print("Error while creating headers for GET response.");
-//             return ERR;
-//         }
-//
-//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
-//         if (status == ERR) {
-//             print("Error while creating GET response.");
-//             return ERR;
-//         }
-//
-//         finder_clean();
-//         if (args_len != 0) {
-//             free(path_aux);
-//             free(args_aux);
-//         }
-//     }
-//
-//     // POST
-//     if (strcmp(rd.method, "POST") == 0) {
-//         status = finder_setup();
-//         if (status == ERR) {
-//             print("finder_setup failure.");
-//             return ERR;
-//         }
-//         strcpy(real_path, so.server_root);
-//         strcat(real_path, rd.path);
-//         file_len = finder_load(real_path, rd.body, rd.body_len, &file_content, &content_type, &check_flag);
-//
-//         status = header_build(so, real_path, content_type, file_len, check_flag, 0, res_headers, &num_headers);
-//         if (status == ERR) {
-//             print("Error while creating headers for POST response.");
-//             return ERR;
-//         }
-//
-//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, file_content, file_len);
-//         if (status == ERR) {
-//             print("Error while creating POST response.");
-//             return ERR;
-//         }
-//
-//         finder_clean();
-//     }
-//
-//     // OPTIONS
-//     if (strcmp(rd.method, "OPTIONS") == 0) {
-//         status = header_build(so, NULL, NULL, 0, 0, 1, res_headers, &num_headers);
-//         if (status == ERR) {
-//             print("Error while creating headers for OPTIONS response.");
-//             return ERR;
-//         }
-//
-//         status = http_response_build(&response, rd.version, 200, "OK", 2, num_headers, res_headers, NULL, 0);
-//         if (status == ERR) {
-//             print("Error while creating OPTIONS response.");
-//             return ERR;
-//         }
-//
-//         return OK;
-//     }
-//
-//     return OK;
-// }
 
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
@@ -144,6 +44,8 @@ void error_response(int version, int errcode, char *err, size_t errlen, char *er
     if (tcp_send(sockfd, (const void*)response, (int)response_len) < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
+
+        tcp_close_socket(sockfd);
 
         mutex_lock(&nconn_lock);
         n_conn--;
@@ -356,7 +258,7 @@ int post(int sockfd, struct http_req_data *rd) {
 int options(int sockfd, int version) {
     int status, num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
-    void *response;
+    void *response = NULL;
     size_t response_len;
 
     // construct headers
@@ -419,7 +321,7 @@ void *serve_http(void *args) {
     }
 
     // TODO: establish connection's end
-    while (client_alive) {
+    while (client_alive && active) {
         // clean the buffer
         bzero(receive_buffer, MAX_RECV_LEN);
         // clean the auxiliary buffer as well
@@ -593,16 +495,30 @@ end_serve_http:
     return NULL;
 }
 
-int main() {
+void clean_server_options() {
+    config_free(&so);
+}
+
+int main(int argc, char *argv[]) {
     int status;
 
     // config related
 
-    status = config_parse("server.conf", &so);
+    if (argc < 2) {
+        status = config_parse("server.conf", &so);
+    } else {
+        status = config_parse(argv[1], &so);
+    }
+
     if (status == ERR) {
         printf("Configuration file parsing failed.\n");
         exit(ERR);
     }
+
+    //config_print(&so);
+
+    // always clean this memory
+    atexit(clean_server_options);
 
     // file finder
 
@@ -634,20 +550,3 @@ int main() {
 
     return OK;
 }
-
-// small main to uncomment when I want to test something
-//int main() {
-//    int status;
-//
-//    // config related
-//
-//    status = config_parse("server.conf", &so);
-//    if(status == ERR) {
-//        printf("Configuration file parsing failed.\n");
-//        exit(ERR);
-//    }
-//
-//    config_print(&so);
-//
-//    return OK;
-//}

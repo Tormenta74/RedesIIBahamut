@@ -8,6 +8,8 @@
 #include <string.h>         // strerror
 #include <strings.h>        // bzero
 #include <sys/select.h>     // select
+#include <sys/stat.h>
+#include <syslog.h>
 
 #include "globals.h"
 #include "config.h"
@@ -33,7 +35,7 @@ fd_set active_set, read_set;    // set de sockets y set de control
 void handleSIGINT(int sig_no) {
     print("Server terminated: SIGINT captured.");
     active = 0;
-    //tcp_close_socket(conn_socket);
+    // how to trigger a shutdown?
 }
 
 /*
@@ -60,6 +62,13 @@ int server_setup(struct server_options *so) {
             print("Bad daemonize.");
             return ERR;
         }
+    } else {
+        // file creation permissions 0000
+        umask(0);
+        // set log priorities
+        setlogmask(LOG_UPTO(LOG_INFO));
+        // open the log
+        openlog(so->server_signature, LOG_CONS|LOG_PID|LOG_NDELAY, LOG_LOCAL3);
     }
 
     // signal handling

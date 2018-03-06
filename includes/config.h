@@ -13,7 +13,7 @@ typedef struct server_options {
 } server_options_t;
 
 int config_parse(char* filename, struct server_options *so);
-int config_load_defaults(struct server_options *so);
+void config_free(struct server_options *so);
 void config_print(struct server_options *so);
 
 #endif /*_CONFIG_H*/

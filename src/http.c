@@ -265,10 +265,10 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
  * Return:
  * ERR if there has been an error during the process, OK otherwise
  * */
-int http_response_build(void **buffer, size_t *buflen, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, void *body, size_t body_len) {
-    int i, j;
+int http_response_build(void **response, size_t *buflen, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, void *body, size_t body_len) {
+    int i;
     char buf_aux1[MAX_CHAR], buf_aux2[MAX_CHAR];
-    void **buf;
+    void *buf = NULL;
     size_t head_len;
 
     if (resp == NULL || headers == NULL) {
@@ -290,22 +290,22 @@ int http_response_build(void **buffer, size_t *buflen, int version, int rescode,
     *buflen = head_len + body_len;
 
     /* allocates memory and generates output, it is the responsibility of the caller to free it */
-    *buf = malloc(*buflen);
-    if (!*buf) {
+    buf = malloc(*buflen);
+    if (!buf) {
         print("Failed to allocate memory (%s,%d)", __FILE__, __LINE__);
         return ERR;
     }
 
-    memcpy(*buf, (void *)buf_aux1, head_len);
+    memcpy(buf, (void *)buf_aux1, head_len);
 
-    /* prints body */
+    /* writes body */
     if ((int)body_len > 0) {
-        memcpy((*buf)+head_len, body, body_len);
+        memcpy(buf+head_len, body, body_len);
         //sprintf(buf_aux2, "%.*s", (int)body_len, body);
         //strcat(buf, buf_aux2);
     }
 
-    *buffer = *buf;
+    *response = buf;
 
     return OK;
 }

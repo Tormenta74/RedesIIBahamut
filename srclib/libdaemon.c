@@ -38,8 +38,6 @@ int daemonize(const char *proc_name, const char *root_path) {
     // open the log
     openlog(proc_name, LOG_CONS|LOG_PID|LOG_NDELAY, LOG_LOCAL3);
 
-    print("Sending server to background.");
-
     // create a new session for the process
     if(setsid() < 0) {
         print("Error creating session for the server.");
@@ -57,6 +55,8 @@ int daemonize(const char *proc_name, const char *root_path) {
     for(i=0; i<ts; i++) {
         close(i);
     }
+
+    print("Sending server to background (pid = %d).", getpid());
 
     return OK;
 }

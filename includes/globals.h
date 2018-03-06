@@ -7,7 +7,7 @@
 #define OK  0
 #define ERR -1
 
-char log_buffer[1024];
+char log_buffer[MAX_CHAR];
 
 //#ifdef VERBOSE
 #define print(...) {\
