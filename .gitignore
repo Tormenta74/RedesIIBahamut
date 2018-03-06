@@ -1,7 +1,15 @@
 build/
 lib/
+.vscode/
 
 *.o
+*.out
 
 echo
-fileserver
+file
+server
+testcgi
+testconfig
+testscripts
+
+server.conf

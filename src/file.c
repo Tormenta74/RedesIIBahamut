@@ -11,7 +11,9 @@
 #include "libconcurrent.h"
 #include "libtcp.h"
 
-extern int active;  // server.c
+extern int active;                  // server.c
+extern pthread_mutex_t nconn_lock;  // server.c
+extern int n_conn;                  // server.c
 
 pthread_mutex_t file_lock;
 char *file_contents;
@@ -26,6 +28,11 @@ void *file(void *args) {
 
     if(sock <= 0) {
         print("Wrong parameters for socket. (%s:%d).", __FILE__, __LINE__);
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
         conc_exit(NULL);
     }
 
@@ -35,12 +42,21 @@ void *file(void *args) {
         print("Client closing connection.");
         tcp_close_socket(sock);
 
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
         conc_exit();
     }
 
     if(len < 0) {
         print("Could not receive any data (%s:%d).", __FILE__, __LINE__);
         print("errno (receive): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
         conc_exit();
     }
 
@@ -51,12 +67,22 @@ void *file(void *args) {
         mutex_unlock(&file_lock);
         print("could not send file (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
+
+        mutex_lock(&nconn_lock);
+        n_conn--;
+        mutex_unlock(&nconn_lock);
+
         conc_exit();
     }
     mutex_unlock(&file_lock);
 
     print("Echo correctly sent back. Bye now!");
     tcp_close_socket(sock);
+
+    mutex_lock(&nconn_lock);
+    n_conn--;
+    mutex_unlock(&nconn_lock);
+
     conc_exit();
 }
 
