@@ -14,15 +14,15 @@
  * Description: Internal function that generates a date depending on the parameter passed
  * as an argument. If the parameter is NULL, a string with the current date is returned;
  * if the parameter is a pointer to a time_t date value, a string with that date is returned.
- * Both dates are returned in format "Day, DD Mon YYYY HH:MM:SS GMT" (RFC 1123).
+ * Both dates are returned in format "Day, DD MMM YYYY HH:MM:SS GMT" (RFC 1123). Memory is
+ * allocated for the buffer: it is the responsability of the caller to free it.
  *
  * In:
  * time_t *t: date to be generated (in seconds)
  *
  * Return:
- * String containing either the current date or the desired date in the required format.
- *
- * */
+ * String containing either the current date or the desired date.
+ */
 char *date_generator(time_t *t) {
     time_t rawtime;
     struct tm *timeinfo;
@@ -40,7 +40,7 @@ char *date_generator(time_t *t) {
 
     timeinfo = gmtime(&rawtime);
 
-    /* formatting */
+    /* universal time formatting */
     nformatted = strftime(buffer, 128, "%a, %d %b %Y %T %Z", timeinfo);
     if (nformatted == 0) {
         return NULL;
@@ -55,40 +55,41 @@ char *date_generator(time_t *t) {
  ****************************************************************/
 
 /*
- * Description: Function that returns the current date in the required format using
+ * Description: Returns the current date in the required format using
  * internal functions.
  *
  * Return:
  * String containing the current date.
- * */
+ */
 char *header_date() {
     /* date_generator requires its output to be freed by the caller */
     return date_generator(NULL);
 }
 
 /*
- * Description: Function that returns the name of the server from the server.conf file.
+ * Description: Returns the name of the server parsed from the configuration file.
  *
  * In:
  * struct server_options so: structure that contains server information
  *
  * Return:
  * String containing the name of the server.
- * */
+ */
 char *header_server(struct server_options so) {
     return so.server_signature;
 }
 
 /*
- * Description: Receives the path to an internal file and returns the date of its last
- * modification if it exists.
+ * Description: Receives the path to a file and returns the date of its last modification
+ * if it exists.
  *
  * In:
  * char *path: path of the file whose last modification date is required
  *
  * Return:
- * String containing the date of the last modification, NULL if it doesn't exist or there has been an error
- * */
+ * String containing the date of the last modification, NULL if it doesn't exist or there
+ * has been an error.
+ */
 char *header_last_modified(char *path) {
     int ret;
     struct stat sb;
@@ -122,8 +123,8 @@ char *header_last_modified(char *path) {
  * int *num_headers: pointer to integer to be initialized with the number of headers generated
  *
  * Return:
- * ERR if there has been any error during the process, OK otherwise
- * */
+ * ERR if there has been any error during the process, OK otherwise.
+ */
 int header_build(struct server_options so, char *path, char *contenttype, long len, int res_flag, int check_flag, int options_flag, struct http_pairs *headers, int *num_headers) {
     char *date_buf = NULL, *server_buf = NULL, *lm_buf = NULL;
 

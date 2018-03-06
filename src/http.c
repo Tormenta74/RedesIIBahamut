@@ -13,11 +13,11 @@
  ****************************************************************/
 
 /*
- * Description: Prints the information of a request by a client
+ * Description: Prints the information of a request by a client.
  *
  * In:
  * struct http_req_data *rd: structure which contains information on the request
- * */
+ */
 void http_request_data_print(struct http_req_data *rd) {
     int i = 0;
 
@@ -27,7 +27,6 @@ void http_request_data_print(struct http_req_data *rd) {
     print("\nHeaders:");
 
     for (i=0; i<rd->num_headers; i++) {
-        // gcc -Wformat-overflow will condemn this, but not relevant
         print("%s:\t%s", rd->headers[i].name, rd->headers[i].value);
     }
 
@@ -39,11 +38,11 @@ void http_request_data_print(struct http_req_data *rd) {
 
 /*
  * Description: Frees the resources allocated to create a http_req_data structure which
- * contains the information on a request by a client
+ * contains the information on a request by a client.
  *
  * In:
  * struct http_req_data *rd: structure to be freed which contains information on the request
- * */
+ */
 void http_request_data_free(struct http_req_data *rd) {
     if (rd->method) {
         free(rd->method);
@@ -62,18 +61,18 @@ void http_request_data_free(struct http_req_data *rd) {
 
 
 /*
- * Description: aims to get a pointer to a string containing the body of a request.
- * In some cases there may not be a body, if that happens we indicate the lack of body
- * by the use of a NULL pointer; but, on the other hand, if the body exists, we provide
- * the pointer to the required string.
+ * Description: Aims to get a pointer to a string containing the body of a request.
+ * In some cases there may not be a body; if that happens we indicate the lack of it
+ * by the use of a NULL pointer. On the other hand, if the body exists, the pointer
+ * to its beginning is loaded in *body.
  *
  * In:
  * char *buf: buffer containing the request in which to look for the body
  * char **body: pointer to string, used to return the pointer to the body
  *
  * Return:
- * ERR if there has been an error during the process, OK otherwise
- * */
+ * ERR if there has been an error during the process, OK otherwise.
+ */
 int http_response_body(char *buf, char **body) {
     char sequence[5], *pointer;
 
@@ -129,7 +128,7 @@ int http_response_body(char *buf, char **body) {
  *
  * Return:
  * ERR if there has been an error during the process, OK otherwise
- * */
+ */
 int http_request_get_split(char *buf, size_t buflen, char **path, char **args, size_t *args_len) {
     char *aux;
     size_t path_len_aux, args_len_aux;
@@ -188,7 +187,7 @@ int http_request_get_split(char *buf, size_t buflen, char **path, char **args, s
  *
  * Return:
  * ERR if there has been an error during the process, OK otherwise
- * */
+ */
 int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
     char *method_aux, *path_aux, *body_aux;
     size_t method_len, path_len, body_len, nheaders_aux;
@@ -257,7 +256,7 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
 }
 
 /*
- * Description: Builds a server response (always after processing a request)
+ * Description: Builds a server response (always after processing a request).
  *
  * In:
  * void **response: pointer to the address in which the response is going to be saved
@@ -272,8 +271,8 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *rd) {
  * size_t body_len: length of body
  *
  * Return:
- * ERR if there has been an error during the process, OK otherwise
- * */
+ * ERR if there has been an error during the process, OK otherwise.
+ */
 int http_response_build(void **response, size_t *buflen, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, void *body, size_t body_len) {
     int i;
     char buf_aux1[MAX_CHAR], buf_aux2[MAX_CHAR];
