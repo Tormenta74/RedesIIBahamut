@@ -33,7 +33,7 @@ SERVER = server
 
 # core target of the makefile
 
-TARGET = $(TESTSCRIPTS)
+TARGET = $(SERVER)
 
 # cleaning targets
 
@@ -92,7 +92,7 @@ $(SERVER): $(BUILDDIR)/$(SERVER).o $(BUILDDIR)/$(HTTP).o $(BUILDDIR)/$(CONFIG).o
 ## test programs
 #
 
-$(TESTCGI): $(BUILDDIR)/$(TESTCGI).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o
+$(TESTCGI): $(BUILDDIR)/$(TESTCGI).o $(BUILDDIR)/$(DUPER).o $(BUILDDIR)/$(SCRIPT).o $(BUILDDIR)/$(FINDER).o
 	@echo "Enlazando $(notdir $@): $(notdir $^)"
 	$(CC) -o $@ $^ $(LDFLAGS)
 

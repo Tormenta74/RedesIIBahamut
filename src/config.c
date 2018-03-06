@@ -120,6 +120,18 @@ int config_parse(char* filename, struct server_options *so) {
     return OK;
 }
 
+void config_free(struct server_options *so) {
+    if (!so) {
+        return;
+    }
+    if(so->server_root) {
+        free(so->server_root);
+    }
+    if(so->server_signature) {
+        free(so->server_signature);
+    }
+}
+
 void config_print(struct server_options *so) {
     if (!so) {
         return;

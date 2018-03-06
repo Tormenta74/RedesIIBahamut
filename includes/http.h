@@ -34,7 +34,7 @@ int http_request_parse(char *buf, size_t buflen, struct http_req_data *req_data)
 
 int http_request_body(char *buf, char **body);
 int http_request_get_split(char *buf, size_t buflen, char **path, char **args, size_t *args_len);
-int http_response_build(char* buffer, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, char *body, size_t body_len);
+int http_response_build(void **buffer, size_t *buflen, int version, int rescode, char *resp, size_t resp_len, int num_headers, struct http_pairs *headers, void *body, size_t body_len);
 
 // not used
 //int response_parser(char *buf, size_t buflen, int *version, int *rescode, char *resp, struct http_pairs *headers, int *num_headers);

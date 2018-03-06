@@ -6,33 +6,33 @@
 #include <unistd.h>
 
 #include "globals.h"
-#include "cgi.h"
-//#include "remap-pipe-fds.h"
+#include "finder.h"
 
 int main(int argc, char *argv[]) {
-    int status;
-    char *out;
+    int status, flaggy_boy;
+    char *ctype;
+    void *out;
 
     if (argc != 3) {
         printf("Uso: ./test resource input\n");
         exit(1);
     }
 
-    status = cgi_module_setup();
+    status = finder_setup();
     if (status == ERR) {
-        printf("cgi_module_setup failed\n");
+        printf("finder_setup failed\n");
         exit(1);
     }
 
-    status = cgi_exec_script(argv[1], argv[2], strlen(argv[2])+1, &out);
+    status = finder_load(argv[1], argv[2], strlen(argv[2])+1, &out, &ctype, &flaggy_boy);
     if (status == ERR) {
-        printf("cgi_exec_script failed\n");
+        printf("finder_load failed\n");
         exit(1);
     }
 
-    printf("%s\n", out);
+    printf("%s\n", (char*)out);
 
-    cgi_module_clean();
+    finder_clean();
     free(out);
 
     return 0;

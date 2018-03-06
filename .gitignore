@@ -11,3 +11,5 @@ server
 testcgi
 testconfig
 testscripts
+
+server.conf

@@ -27,7 +27,7 @@ char *date_generator(time_t *t) {
     time_t rawtime;
     struct tm *timeinfo;
     size_t nformatted;
-    char buffer[128], *date_buf;
+    char buffer[128], *output;
 
     /* checks the argument to determine which date is needed */
     if (t != NULL) {
@@ -47,9 +47,9 @@ char *date_generator(time_t *t) {
     }
 
     /* allocation for the string, which must be freed by the caller */
-    date_buf = strndup(buffer, nformatted);
+    output = strndup(buffer, nformatted);
 
-    return date_buf;
+    return output;
 }
 
 /****************************************************************
@@ -124,7 +124,7 @@ char *header_last_modified(char *path) {
  * ERR if there has been any error during the process, OK otherwise
  * */
 int header_build(struct server_options so, char *path, char *contenttype, long len, int check_flag, int options_flag, struct http_pairs *headers, int *num_headers) {
-    char *date_buf, *server_buf, *lm_buf;
+    char *date_buf = NULL, *server_buf = NULL, *lm_buf = NULL;
 
     if (num_headers == NULL || headers == NULL) {
         return ERR;
@@ -148,6 +148,7 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         *num_headers = 3;
     }
 
+    // this is not exactly accurate: remember the error codes also have to do this
     /* generation of the headers that provide information about the resource, in case it is available */
     if (check_flag == 1) {
         lm_buf = header_last_modified(path);
@@ -164,10 +165,14 @@ int header_build(struct server_options so, char *path, char *contenttype, long l
         sprintf(headers[4].value, lm_buf);
 
         *num_headers = 5;
-        free(lm_buf);
+        if(lm_buf) {
+            free(lm_buf);
+        }
     }
 
-    free(date_buf);
+    if(date_buf) {
+        free(date_buf);
+    }
 
     return OK;
 }

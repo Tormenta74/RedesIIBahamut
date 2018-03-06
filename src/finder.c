@@ -7,6 +7,8 @@
 #include "cgi.h"
 #include "finder.h"
 
+extern int tout_seconds;
+
 regex_t txt;
 regex_t html, htm;
 regex_t gif;
@@ -244,7 +246,7 @@ int fill_content_type(const char *type, char **contenttype) {
 
 // opens and reads the file into the output buffer, loads the content type if it can
 // indicates wheter it could determine the content type in the return value
-long finder_load(const char *resource, const char *input, int inlen, char **output, char **contenttype, int *check_flag) {
+long finder_load(const char *resource, const char *input, int inlen, void **output, char **contenttype, int *check_flag) {
     int status;
     char errbuf[128];
 
@@ -262,13 +264,15 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     status = regexec(&php, resource, 0, NULL, 0);
     if (!status) {
         // launch fork_exec php
-        if ((file_len = cgi_exec_script("php", resource, input, inlen, output)) == ERR) {
+        char *script_output;
+        if ((file_len = cgi_exec_script("php", resource, input, inlen, &script_output, tout_seconds)) == ERR) {
             // failed to execute
             return ERR;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
+        *output = script_output;
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &php, errbuf, 128);
@@ -279,13 +283,15 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     status = regexec(&py, resource, 0, NULL, 0);
     if (!status) {
         // launch fork_exec python
-        if ((file_len = cgi_exec_script("python", resource, input, inlen, output)) == ERR) {
+        char *script_output;
+        if ((file_len = cgi_exec_script("python", resource, input, inlen,  &script_output, tout_seconds)) == ERR) {
             // failed to execute
             return ERR;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
+        *output = script_output;
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &py, errbuf, 128);
@@ -306,8 +312,8 @@ long finder_load(const char *resource, const char *input, int inlen, char **outp
     fseek(file_pointer, 0, SEEK_SET);
 
     // reserve enough memory for the entire file and load it
-    *output = (char*)malloc(file_len+1);
-    fread(*output, file_len, 1, file_pointer);
+    *output = malloc(file_len);
+    fread(*output, (size_t)file_len, 1, file_pointer);
     // this breaks, and I don't fully understand why
     //*output[file_len] = '\0';
 

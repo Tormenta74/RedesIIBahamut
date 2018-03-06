@@ -8,6 +8,8 @@
 #include <string.h>         // strerror
 #include <strings.h>        // bzero
 #include <sys/select.h>     // select
+#include <sys/stat.h>
+#include <syslog.h>
 
 #include "globals.h"
 #include "config.h"
@@ -33,7 +35,8 @@ fd_set active_set, read_set;    // set de sockets y set de control
 void handleSIGINT(int sig_no) {
     print("Server terminated: SIGINT captured.");
     active = 0;
-    //tcp_close_socket(conn_socket);
+    // how to trigger a graceful shutdown?
+    tcp_close_socket(conn_socket);
 }
 
 /*
@@ -60,6 +63,13 @@ int server_setup(struct server_options *so) {
             print("Bad daemonize.");
             return ERR;
         }
+    } else {
+        // file creation permissions 0000
+        umask(0);
+        // set log priorities
+        setlogmask(LOG_UPTO(LOG_INFO));
+        // open the log
+        openlog(so->server_signature, LOG_CONS|LOG_PID|LOG_NDELAY, LOG_LOCAL3);
     }
 
     // signal handling
@@ -166,8 +176,11 @@ int server_accept_loop(attention_routine *fn) {
         int* s = malloc(sizeof(int));
         *s = new_socket;
 
+        // you sneaky bastard
         mutex_lock(&nconn_lock);
         if(++n_conn <= MAX_CLIENTS) {
+            // tenemos que desbloquear inmediatamente (it iw known)
+            mutex_unlock(&nconn_lock);
             if(iter == 1) { // el servidor tiene la opción de ser iterativo
                 // llamamos directamente a la rutina de atención
                 fn((void*)s);
@@ -176,12 +189,13 @@ int server_accept_loop(attention_routine *fn) {
                 conc_launch(fn, (void*)s);
             }
         } else {
+            // tenemos que desbloquear inmediatamente (it iw known)
+            mutex_unlock(&nconn_lock);
             // TODO: either nothing, or send a message to the client informing them
             // that we are not accepting new connections
             tcp_close_socket(new_socket);
             free(s);
         }
-        mutex_unlock(&nconn_lock);
     }
 
     return OK;
