@@ -7,6 +7,8 @@
 #include "cgi.h"
 #include "finder.h"
 
+extern int tout_seconds;
+
 regex_t txt;
 regex_t html, htm;
 regex_t gif;
@@ -263,7 +265,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     if (!status) {
         // launch fork_exec php
         char *script_output;
-        if ((file_len = cgi_exec_script("php", resource, input, inlen, &script_output)) == ERR) {
+        if ((file_len = cgi_exec_script("php", resource, input, inlen, &script_output, tout_seconds)) == ERR) {
             // failed to execute
             return ERR;
         }
@@ -282,7 +284,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     if (!status) {
         // launch fork_exec python
         char *script_output;
-        if ((file_len = cgi_exec_script("python", resource, input, inlen,  &script_output)) == ERR) {
+        if ((file_len = cgi_exec_script("python", resource, input, inlen,  &script_output, tout_seconds)) == ERR) {
             // failed to execute
             return ERR;
         }

@@ -176,8 +176,11 @@ int server_accept_loop(attention_routine *fn) {
         int* s = malloc(sizeof(int));
         *s = new_socket;
 
+        // you sneaky bastard
         mutex_lock(&nconn_lock);
         if(++n_conn <= MAX_CLIENTS) {
+            // tenemos que desbloquear inmediatamente (it iw known)
+            mutex_unlock(&nconn_lock);
             if(iter == 1) { // el servidor tiene la opción de ser iterativo
                 // llamamos directamente a la rutina de atención
                 fn((void*)s);
@@ -186,12 +189,13 @@ int server_accept_loop(attention_routine *fn) {
                 conc_launch(fn, (void*)s);
             }
         } else {
+            // tenemos que desbloquear inmediatamente (it iw known)
+            mutex_unlock(&nconn_lock);
             // TODO: either nothing, or send a message to the client informing them
             // that we are not accepting new connections
             tcp_close_socket(new_socket);
             free(s);
         }
-        mutex_unlock(&nconn_lock);
     }
 
     return OK;

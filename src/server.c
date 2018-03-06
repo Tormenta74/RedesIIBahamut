@@ -27,6 +27,7 @@ extern pthread_mutex_t nconn_lock;  // server.c
 extern int n_conn;                  // server.c
 
 struct server_options so;
+int tout_seconds;
 
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
@@ -116,13 +117,18 @@ int get(int sockfd, struct http_req_data *rd) {
         return ERR;
     }
 
+    // concat server path with resource path
     strcpy(real_path, so.server_root);
     strcat(real_path, path_aux);
+
+    // attempt to read / exec
     file_len = finder_load(real_path, args_aux, args_len, &file_content, &content_type, &check_flag);
 
     if (file_len == NOT_FOUND) {
+        // 404, no such resource
         return NOT_FOUND;
     } else if (file_len == NO_MATCH) {
+        // 415, we don't know what type it is
         return NO_MATCH;
     }
 
@@ -447,22 +453,14 @@ void *serve_http(void *args) {
         switch (verb) {
         case GET:
             status = get(sockfd, &rd);
-            if (status == NOT_FOUND) {
-                resource_not_found(sockfd, rd.version);
-            } else if (status == NO_MATCH) {
-                unsupported_media_type(sockfd, rd.version);
-            } else if (status == ERR) {
+            if (status == ERR) {
                 print("GET processing failed.");
                 goto end_serve_http;
             }
             break;
         case POST:
             status = post(sockfd, &rd);
-            if (status == NOT_FOUND) {
-                resource_not_found(sockfd, rd.version);
-            } else if (status == NO_MATCH) {
-                unsupported_media_type(sockfd, rd.version);
-            } else if (status == ERR) {
+            if (status == ERR) {
                 print("POST processing failed.");
                 goto end_serve_http;
             }
@@ -477,6 +475,13 @@ void *serve_http(void *args) {
         default:
             // we should never get here, but better safe than sorry
             client_alive = 0;
+        }
+
+        // check for incomplete processing
+        if (status == NOT_FOUND) {
+            resource_not_found(sockfd, rd.version);
+        } else if (status == NO_MATCH) {
+            unsupported_media_type(sockfd, rd.version);
         }
 
         // we have processed: begin again (if the client is still there)
@@ -509,6 +514,9 @@ int main(int argc, char *argv[]) {
     } else {
         status = config_parse(argv[1], &so);
     }
+    
+    // tout_seconds = so->timeout;
+    tout_seconds = 3;
 
     if (status == ERR) {
         printf("Configuration file parsing failed.\n");

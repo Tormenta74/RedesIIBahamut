@@ -33,7 +33,7 @@ SERVER = server
 
 # core target of the makefile
 
-TARGET = $(TESTCGI)
+TARGET = $(SERVER)
 
 # cleaning targets
 

@@ -33,10 +33,11 @@
  * const char *input: the string which the script is to receive via its standard input
  * int inlen: length of the input
  * char **output: pointer to the memory zone where to write the output of the script
+ * int wait_s: desired timeout in seconds
  *
  * Return: ERR in case of failure at any point. Size of the output string otherwise.
  */
-long cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output) {
+long cgi_exec_script(const char *program, const char *resource, const char *input, int inlen, char **output, int wait_s) {
     int status = ERR, nread = 0;
     long output_size = 0;
     int writepipe[2], readpipe[2];
@@ -114,7 +115,6 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
         // but I tell ya, I'm busy!
 
         timeout.tv_sec = 3;
-        timeout.tv_usec = 0;
 
         bzero(aux, MAX_SCRIPT_LINE_OUTPUT);
 
