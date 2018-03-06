@@ -1,15 +1,19 @@
 #ifndef _HTTP_H
 #define _HTTP_H
 
-#define MAX_HEADERS 32
-#define MAX_ARGS 32
-#define MAX_LEN_HEADER 512
+#define MAX_HEADERS 32          // maximum number of headers for a request/response
+#define MAX_LEN_HEADER 512      // maximum length of the name or value of a header
 
+// deprecated
+#define MAX_ARGS 32             // maximum number of arguments for a request
+
+/* represents either a header as a pair {name, value} or an argument as a pair {key, value} */
 typedef struct http_pairs {
     char name[MAX_LEN_HEADER];
     char value[MAX_LEN_HEADER];
 } http_pairs_t;
 
+/* contains all the information we can extract from a request */
 typedef struct http_req_data {
     int version;
     char *method;
@@ -21,7 +25,7 @@ typedef struct http_req_data {
     struct http_pairs headers[MAX_HEADERS];
 } http_req_data_t;
 
-// depr
+// deprecated
 typedef struct http_args_data {
     int num_pairs;
     struct http_pairs args[MAX_ARGS];
