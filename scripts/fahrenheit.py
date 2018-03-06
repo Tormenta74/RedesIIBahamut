@@ -1,7 +1,7 @@
 from sys import stdin, stdout
 
 # take a whole line
-temp_str = stdin.readline()
+temp_str = stdin.readline().strip()
 
 # separate key=value pairs
 args = temp_str.split('&')
@@ -39,17 +39,18 @@ if 'scale' not in d:
     stdout.write('Error: No scale was specified\r\n\r\n')
     exit(3)
 else:
+    scale = d['scale'].replace('\x00', '')
     # convert from Celsius to Fahrenheit
-    if d['scale'] == 'c':
+    if scale == 'c':
         stdout.write('{:.2f}ºC = {:.2f}ºF\r\n'
                      .format(t, (t*(9/5))+32))
     # convert from Fahrenheit to Celsius
-    elif d['scale'] == 'f':
+    elif scale == 'f':
         stdout.write('{:.2f}ºF = {:.2f}ºC\r\n'
                      .format(t, (t-32)*(5/9)))
     # no other conversion is supported
     else:
-        stdout.write('Error: ' + d['scale'].capitalize() + ' is not a valid scale\r\n\r\n')
+        stdout.write('Error: ' + scale.capitalize() + ' is not a valid scale\r\n\r\n')
         exit(3)
 
 stdout.write('\r\n')

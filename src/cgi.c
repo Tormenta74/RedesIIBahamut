@@ -1,8 +1,12 @@
+#include <fcntl.h>
+#include <regex.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/stat.h>
 #include <sys/types.h>
-#include <regex.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -96,23 +100,67 @@ long cgi_exec_script(const char *program, const char *resource, const char *inpu
         write(PARENT_WRITE, input, inlen);
         close(PARENT_WRITE);
 
-        // hear what it has to say
+        // prepare to hear what it has to say
+
+        fd_set microset;
+        struct timeval timeout;
+        int sret;
+
+        // a whole fd_set for my child
+
+        FD_ZERO(&microset);
+        FD_SET(PARENT_READ, &microset);
+
+        // but I tell ya, I'm busy!
+
+        timeout.tv_sec = 3;
+        timeout.tv_usec = 0;
 
         bzero(aux, MAX_SCRIPT_LINE_OUTPUT);
 
-        while ((nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT)) >= 0) {
-            sprintf(aux, "%s%s", aux, buffer);
-            output_size += nread;
+        // now let's hear it
 
-            // "\n" means there was a new line (in python)
-            // "\000" means there was a new line (in php)
-            //
-            // Sigh.
-            //
-            // "\r\n" afterwards means the script sent a line with just that
-            if (strstr(buffer, "\n\r\n") != NULL
-                    || strstr(buffer, "\000\r\n") != NULL) {
-                break;
+        sret = select(PARENT_READ + 1, &microset, NULL, NULL, &timeout);
+        //sret = select(PARENT_READ + 1, &microset, NULL, NULL, NULL);
+        if(sret == -1) {
+
+            // oh boy
+            print("cgi: Error selecting on the child stdout.");
+            return ERR;
+
+        } else if(sret == 0) {
+
+            // too late, son
+            print("cgi: Script timed out.");
+
+            // now I have to end you
+            kill(pid, SIGTERM);
+
+            return ERR;
+
+        } else {
+            //nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT);
+            //if(nread <= 0) {
+            //    print("cgi: Select triggered, but read gave nothing.");
+            //    return ERR;
+            //}
+            //sprintf(aux, "%s%s", aux, buffer);
+            //output_size += nread;
+
+            while ((nread = read(PARENT_READ, buffer, MAX_SCRIPT_LINE_OUTPUT)) >= 0) {
+                sprintf(aux, "%s%s", aux, buffer);
+                output_size += nread;
+
+                // "\n" means there was a new line (in python)
+                // "\000" means there was a new line (in php)
+                //
+                // Sigh.
+                //
+                // "\r\n" afterwards means the script sent a line with just that
+                if (strstr(buffer, "\n\r\n") != NULL
+                        || strstr(buffer, "\000\r\n") != NULL) {
+                    break;
+                }
             }
         }
 

@@ -262,13 +262,15 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     status = regexec(&php, resource, 0, NULL, 0);
     if (!status) {
         // launch fork_exec php
-        if ((file_len = cgi_exec_script("php", resource, input, inlen, (char**)&output)) == ERR) {
+        char *script_output;
+        if ((file_len = cgi_exec_script("php", resource, input, inlen, &script_output)) == ERR) {
             // failed to execute
             return ERR;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
+        *output = script_output;
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &php, errbuf, 128);
@@ -279,13 +281,15 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     status = regexec(&py, resource, 0, NULL, 0);
     if (!status) {
         // launch fork_exec python
-        if ((file_len = cgi_exec_script("python", resource, input, inlen, (char**)&output)) == ERR) {
+        char *script_output;
+        if ((file_len = cgi_exec_script("python", resource, input, inlen,  &script_output)) == ERR) {
             // failed to execute
             return ERR;
         }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
+        *output = script_output;
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &py, errbuf, 128);
