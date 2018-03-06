@@ -35,6 +35,17 @@ int tout_seconds;
  * AUXILIARY FUNCTIONS
  *****************************************************************/
 
+/*
+ * Description: Generalizes the process of creating server error responses, based on several arguments.
+ *
+ * In:
+ * int version: HTTP version to create the response with
+ * int errcode: error code associated with the server response desired
+ * char *err: short identifying message to define the error ("Method Not Implemented", "Resource Not Found", etc)
+ * size_t errlen: length of err
+ * char *err_extended: long description of the error to show in the html page
+ * int sockfd: socket identifier to send the message to the client
+ */
 void error_response(int version, int errcode, char *err, size_t errlen, char *err_extended, int sockfd) {
     int num_headers;
     struct http_pairs res_headers[MAX_HEADERS];
@@ -42,25 +53,37 @@ void error_response(int version, int errcode, char *err, size_t errlen, char *er
     void *response;
     size_t response_len;
 
+    /* builds the body; every error code (with its long description) generates a default html page to show to the client */
     sprintf(body, "<HTML><HEAD><title>%d Error Page</title></HEAD><BODY><p align=\"center\"><h1>Error %d</h1><br>%s<p></BODY></HTML>", errcode, errcode, err_extended);
 
+    /* builds the header, in this case res_flag=1, check_flag=0, options_flag=0 so that the response contains date, server name, length of the html page
+    and content of the html page */
     header_build(so, NULL, "text/html", (long)strlen(body), 1, 0, 0, res_headers, &num_headers);
 
+    /* builds the response including the html page as the body */
     http_response_build(&response, &response_len, version, errcode, err, errlen, num_headers, res_headers, (void *)body, strlen(body));
 
+    /* in this case, we don't need a loop to send the message as it will always be small enough */
     if (tcp_send(sockfd, (const void*)response, (int)response_len) < 0) {
         print("could not send response (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
 
+        /* closes socket */
         tcp_close_socket(sockfd);
 
+        /* frees response */
+        free(response);
+
+        /* decreases the number of concurrent connections */
         mutex_lock(&nconn_lock);
         n_conn--;
         mutex_unlock(&nconn_lock);
 
+        /* exits */
         conc_exit();
     }
 
+    /* frees response */
     free(response);
 }
 
