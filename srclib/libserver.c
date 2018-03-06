@@ -35,7 +35,8 @@ fd_set active_set, read_set;    // set de sockets y set de control
 void handleSIGINT(int sig_no) {
     print("Server terminated: SIGINT captured.");
     active = 0;
-    // how to trigger a shutdown?
+    // how to trigger a graceful shutdown?
+    tcp_close_socket(conn_socket);
 }
 
 /*
