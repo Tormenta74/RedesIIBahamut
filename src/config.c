@@ -24,7 +24,7 @@
  * char **output: pointer to the memory zone where to write the output of the script
  *
  * Return: ERR in case of failure at any point. Size of the output string otherwise.
- * */
+ */
 int config_parse(char* filename, struct server_options *so) {
     size_t len;
     ssize_t read;
@@ -122,6 +122,12 @@ int config_parse(char* filename, struct server_options *so) {
     return OK;
 }
 
+/*
+ * Description: Deallocates the possible reserved memory addresses in the struct.
+ *
+ * In:
+ * struct server_options *so: pointer to the struct to be freed
+ */
 void config_free(struct server_options *so) {
     if (!so) {
         return;
@@ -134,6 +140,12 @@ void config_free(struct server_options *so) {
     }
 }
 
+/*
+ * Description: Prints the (standard) options stored in the struct.
+ *
+ * In:
+ * struct server_options *so: pointer to the struct to be shown
+ */
 void config_print(struct server_options *so) {
     if (!so) {
         return;

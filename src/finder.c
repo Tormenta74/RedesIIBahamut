@@ -8,8 +8,9 @@
 #include "cgi.h"
 #include "finder.h"
 
-extern int tout_seconds;
+extern int tout_seconds;    // server.c
 
+// all the file extensions described in the requirements
 regex_t txt;
 regex_t html, htm;
 regex_t gif;
@@ -20,6 +21,11 @@ regex_t doc, docx;
 regex_t pdf;
 regex_t py, php;
 
+/*
+ * Description: Allocates and initializes the regular expressions to analyze the file types.
+ *
+ * Return: ERR in case of failure at any point. OK otherwise.
+ */
 int finder_setup() {
     int status;
 
@@ -202,6 +208,9 @@ int finder_setup() {
     return OK;
 }
 
+/*
+ * Description: Deallocates the regular expressions.
+ */
 void finder_clean() {
     regfree(&doc);
     regfree(&docx);
@@ -219,7 +228,17 @@ void finder_clean() {
     regfree(&txt);
 }
 
-// note: if "type" has spaces in it, this will work poorly
+// note: if
+/*
+ * Description: Allocates memory for a buffer containing the Content-Type string.
+ * (if the string contains spaces, this function may cause problems)
+ *
+ * In:
+ * const char *type: literal string
+ * char **contenttype: pointer to the memory address to be reserved
+ *
+ * Return: ERR in case of failure at any point. OK otherwise.
+ */
 int fill_content_type(const char *type, char **contenttype) {
     if (!type || !contenttype) {
         return ERR;
@@ -236,17 +255,27 @@ int fill_content_type(const char *type, char **contenttype) {
     return OK;
 }
 
-//text/plain: .txt, .php, .py
-//text/html: .html, .htm
-//image/gif: .gif
-//image/png: .png
-//image/jpeg: .jpeg, .jpg
-//video/mpeg: .mpeg, .mpg
-//application/msword: .doc, .docx
-//application/pdf: .pdf
-
-// opens and reads the file into the output buffer, loads the content type if it can
-// indicates wheter it could determine the content type in the return value
+/*
+ * Description: Attempts to find the file or script in the "resource" path and then
+ * determine it's filetype based on the filename extension in this fashion:
+ *
+ * text/plain: .txt, .php, .py
+ * text/html: .html, .htm
+ * image/gif: .gif
+ * image/png: .png
+ * image/jpeg: .jpeg, .jpg
+ * video/mpeg: .mpeg, .mpg
+ * application/msword: .doc, .docx
+ * application/pdf: .pdf
+ *
+ * In:
+ * int wait_s: desired timeout in seconds
+ *
+ * Return: ERR in case of failure at any point. NOT_FOUND if the resource does not exist
+ * or is a directory. NO_MATCH if the filetype could not be determined. TIMEOUT if the resource
+ * is a script and execution took longer than the specified value in seconds. Size of the output
+ * string otherwise.
+ */
 long finder_load(const char *resource, const char *input, int inlen, void **output, char **contenttype, int *check_flag) {
     int status;
     char errbuf[128];
@@ -337,7 +366,14 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     *output = malloc(file_len);
     fread(*output, (size_t)file_len, 1, file_pointer);
 
+    // done with the file pointer
     fclose(file_pointer);
+
+    ////////////////////////////////////////////////////
+    // Execute each of the regular expressions on the //
+    // filename, with the respective error checks and //
+    // filling of the content type.                   //
+    ////////////////////////////////////////////////////
 
     status = regexec(&txt, resource, 0, NULL, 0);
     if (!status) {

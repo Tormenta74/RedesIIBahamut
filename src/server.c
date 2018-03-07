@@ -24,9 +24,9 @@
 #define OPTIONS 1003
 
 
-extern int active;                  // server.c
-extern pthread_mutex_t nconn_lock;  // server.c
-extern int n_conn;                  // server.c
+extern int active;                  // libserver.c
+extern pthread_mutex_t nconn_lock;  // libserver.c
+extern int n_conn;                  // libserver.c
 
 struct server_options so;
 int tout_seconds;
