@@ -26,7 +26,7 @@ void *file(void *args) {
     print("file: handdling socket %d.", sock);
     free(args); // done
 
-    if(sock <= 0) {
+    if (sock <= 0) {
         print("Wrong parameters for socket. (%s:%d).", __FILE__, __LINE__);
 
         mutex_lock(&nconn_lock);
@@ -38,7 +38,7 @@ void *file(void *args) {
 
     bzero(buffer, 1024);
 
-    if((len = tcp_receive(sock, buffer, 1024)) == 0) {
+    if ((len = tcp_receive(sock, buffer, 1024)) == 0) {
         print("Client closing connection.");
         tcp_close_socket(sock);
 
@@ -49,7 +49,7 @@ void *file(void *args) {
         conc_exit();
     }
 
-    if(len < 0) {
+    if (len < 0) {
         print("Could not receive any data (%s:%d).", __FILE__, __LINE__);
         print("errno (receive): %s.", strerror(errno));
 
@@ -63,7 +63,7 @@ void *file(void *args) {
     print("Received %d bytes.", len);
 
     mutex_lock(&file_lock);
-    if(tcp_send(sock, (const void*)file_contents, filelen) < 0) {
+    if (tcp_send(sock, (const void*)file_contents, filelen) < 0) {
         mutex_unlock(&file_lock);
         print("could not send file (%s:%d).", __FILE__, __LINE__);
         print("errno (send): %s.", strerror(errno));
@@ -92,13 +92,13 @@ int main(int argc, char *argv[]) {
     int status;
     FILE *fp;
 
-    if(argc != 2) {
+    if (argc != 2) {
         fprintf(stderr, "Usage: ./fileserver <file>\n");
         exit(ERR);
     }
 
     // get the file from the arguments to the program
-    if((fp = fopen(argv[1], "r")) == NULL) {
+    if ((fp = fopen(argv[1], "r")) == NULL) {
         fprintf(stderr, "Could not read file %s.\n", argv[1]);
         exit(ERR);
     }
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     file_contents[filelen] = '\0';
 
     // init the mutex for the copy of the file
-    if(mutex_init(&file_lock) == ERR) {
+    if (mutex_init(&file_lock) == ERR) {
         printf("Could not init file mutex.\n");
         return ERR;
     }
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     printf("Going down: use '$ journalctl -f | grep file_server' to follow the server logs.\n");
 
     status = server_setup("file_server", local_addr, local_port);
-    if(status == ERR) {
+    if (status == ERR) {
         print("Error while setting up server. Shutting down.");
         return ERR;
     }
