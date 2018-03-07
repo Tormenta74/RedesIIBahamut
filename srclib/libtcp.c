@@ -43,7 +43,7 @@ int tcp_close_socket(int sockfd) {
  */
 int tcp_send(int sockfd, const void *msg, int length) {
     // sanity check
-    if(sockfd < 0 || msg == NULL || length <= 0) {
+    if (sockfd < 0 || msg == NULL || length <= 0) {
         return ERR;
     }
     // blocking call
@@ -64,7 +64,7 @@ int tcp_send(int sockfd, const void *msg, int length) {
  */
 int tcp_receive(int sockfd, void *buffer, int size) {
     // sanity check
-    if(sockfd < 0 || buffer == NULL || size <= 0) {
+    if (sockfd < 0 || buffer == NULL || size <= 0) {
         return ERR;
     }
     // blocking call
@@ -88,7 +88,7 @@ int tcp_receive(int sockfd, void *buffer, int size) {
  */
 int tcp_receive_nb(int sockfd, void *buffer, int size) {
     // sanity check
-    if(sockfd < 0 || buffer == NULL || size <= 0) {
+    if (sockfd < 0 || buffer == NULL || size <= 0) {
         return ERR;
     }
     // NON blocking call
@@ -116,7 +116,7 @@ int tcp_bind_port(int sockfd, uint32_t addr, uint16_t port) {
     struct sockaddr_in sock;
 
     // sanity check
-    if(sockfd < 0 || htons(port) < 0) {
+    if (sockfd < 0 || htons(port) < 0) {
         return ERR;
     }
 
@@ -124,7 +124,7 @@ int tcp_bind_port(int sockfd, uint32_t addr, uint16_t port) {
     sock.sin_family = AF_INET;
     sock.sin_port = htons(port);          // convert to network order (short)
     sock.sin_addr.s_addr = htonl(addr);   // convert to network order (long)
-    if(bind(sockfd, (struct sockaddr*)&sock, sizeof sock)) {
+    if (bind(sockfd, (struct sockaddr*)&sock, sizeof sock)) {
         return ERR;
     }
     return OK;
@@ -142,7 +142,7 @@ int tcp_bind_port(int sockfd, uint32_t addr, uint16_t port) {
  */
 int tcp_listen(int sockfd, int maxsize) {
     // sanity check
-    if(sockfd < 0 || maxsize <= 0) {
+    if (sockfd < 0 || maxsize <= 0) {
         return ERR;
     }
     return listen(sockfd, maxsize);
@@ -165,7 +165,7 @@ int tcp_accept(int sockfd, int *new_socket, struct sockaddr_in *addr) {
     socklen_t addr_len;
 
     // sanity check
-    if(sockfd < 0 || new_socket == NULL || addr == NULL) {
+    if (sockfd < 0 || new_socket == NULL || addr == NULL) {
         return ERR;
     }
 
@@ -174,7 +174,7 @@ int tcp_accept(int sockfd, int *new_socket, struct sockaddr_in *addr) {
     // assume error
     *new_socket = -1;
     // accept returns the new socket's file descriptor
-    if((*new_socket = accept(sockfd, (struct sockaddr*)addr, &addr_len)) == ERR) {
+    if ((*new_socket = accept(sockfd, (struct sockaddr*)addr, &addr_len)) == ERR) {
         return ERR;
     }
 
@@ -201,7 +201,7 @@ int tcp_connect_to(int sockfd, uint32_t addr, uint16_t port) {
     struct sockaddr_in sock;
 
     // sanity check
-    if(sockfd < 0 || htons(port) < 0) {
+    if (sockfd < 0 || htons(port) < 0) {
         return ERR;
     }
 
@@ -211,7 +211,7 @@ int tcp_connect_to(int sockfd, uint32_t addr, uint16_t port) {
     sock.sin_addr.s_addr = addr;
 
     // blocking call
-    if(connect(sockfd, (struct sockaddr*)&sock, sizeof sock)) {
+    if (connect(sockfd, (struct sockaddr*)&sock, sizeof sock)) {
         return ERR;
     }
 

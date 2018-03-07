@@ -8,13 +8,15 @@
 #include "globals.h"
 #include "finder.h"
 
+int tout_seconds;
+
 int main(int argc, char *argv[]) {
     int status, flaggy_boy;
     char *ctype;
     void *out;
 
-    if (argc != 3) {
-        printf("Uso: ./test resource input\n");
+    if (argc != 4) {
+        printf("Uso: ./test resource input timeout\n");
         exit(1);
     }
 
@@ -23,6 +25,8 @@ int main(int argc, char *argv[]) {
         printf("finder_setup failed\n");
         exit(1);
     }
+
+    tout_seconds = atoi(argv[3]);
 
     status = finder_load(argv[1], argv[2], strlen(argv[2])+1, &out, &ctype, &flaggy_boy);
     if (status == ERR) {

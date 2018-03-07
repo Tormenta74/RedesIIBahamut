@@ -1,8 +1,8 @@
 #ifndef _FINDER_H
 #define _FINDER_H
 
-#define NOT_FOUND -2
-#define NO_MATCH -3
+#define NOT_FOUND   -2
+#define NO_MATCH    -3
 
 int finder_setup();
 void finder_clean();

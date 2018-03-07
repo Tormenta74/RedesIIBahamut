@@ -17,7 +17,7 @@
  */
 int conc_launch(void*(*routine)(void*), void *arg) {
     pthread_t tid;
-    if(routine) {
+    if (routine) {
         return pthread_create(&tid, NULL, routine, arg);
     }
     return ERR;
@@ -39,7 +39,7 @@ void conc_exit() {
  * Return: ERR in case of sanity failure. pthread_mutex_init's return otherwise.
  */
 int mutex_init(pthread_mutex_t *lock) {
-    if(lock) {
+    if (lock) {
         return pthread_mutex_init(lock, NULL);
     }
     return ERR;
@@ -54,7 +54,7 @@ int mutex_init(pthread_mutex_t *lock) {
  * Return: ERR in case of sanity failure. pthread_mutex_lock's return otherwise.
  */
 int mutex_lock(pthread_mutex_t *lock) {
-    if(lock) {
+    if (lock) {
         return pthread_mutex_lock(lock);
     }
     return ERR;
@@ -69,7 +69,7 @@ int mutex_lock(pthread_mutex_t *lock) {
  * Return: ERR in case of sanity failure. pthread_mutex_unlock's return otherwise.
  */
 int mutex_unlock(pthread_mutex_t *lock) {
-    if(lock) {
+    if (lock) {
         return pthread_mutex_unlock(lock);
     }
     return ERR;
@@ -84,7 +84,7 @@ int mutex_unlock(pthread_mutex_t *lock) {
  * Return: ERR in case of sanity failure. pthread_mutex_destroy's return otherwise.
  */
 int mutex_destroy(pthread_mutex_t *lock) {
-    if(lock) {
+    if (lock) {
         return pthread_mutex_destroy(lock);
     }
     return ERR;

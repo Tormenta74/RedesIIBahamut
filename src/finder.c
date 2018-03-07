@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <regex.h>
 
 #include "globals.h"
 #include "cgi.h"
 #include "finder.h"
 
-extern int tout_seconds;
+extern int tout_seconds;    // server.c
 
+// all the file extensions described in the requirements
 regex_t txt;
 regex_t html, htm;
 regex_t gif;
@@ -19,12 +21,17 @@ regex_t doc, docx;
 regex_t pdf;
 regex_t py, php;
 
+/*
+ * Description: Allocates and initializes the regular expressions to analyze the file types.
+ *
+ * Return: ERR in case of failure at any point. OK otherwise.
+ */
 int finder_setup() {
     int status;
 
     status = regcomp(&doc, "^.*\\.doc$", 0);
     if (status) {
-        print("Could not compile the doc extension regex.");
+        print("finder: Could not compile the doc extension regex.");
         return ERR;
     }
 
@@ -37,7 +44,7 @@ int finder_setup() {
 
     status = regcomp(&gif, "^.*\\.gif$", 0);
     if (status) {
-        print("Could not compile the gif extension regex.");
+        print("finder: Could not compile the gif extension regex.");
         regfree(&doc);
         regfree(&docx);
         return ERR;
@@ -45,7 +52,7 @@ int finder_setup() {
 
     status = regcomp(&htm, "^.*\\.htm$", 0);
     if (status) {
-        print("Could not compile the htm extension regex.");
+        print("finder: Could not compile the htm extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -54,7 +61,7 @@ int finder_setup() {
 
     status = regcomp(&html, "^.*\\.html$", 0);
     if (status) {
-        print("Could not compile the html extension regex.");
+        print("finder: Could not compile the html extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -64,7 +71,7 @@ int finder_setup() {
 
     status = regcomp(&jpeg, "^.*\\.jpeg$", 0);
     if (status) {
-        print("Could not compile the jpeg extension regex.");
+        print("finder: Could not compile the jpeg extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -75,7 +82,7 @@ int finder_setup() {
 
     status = regcomp(&jpg, "^.*\\.jpg$", 0);
     if (status) {
-        print("Could not compile the jpg extension regex.");
+        print("finder: Could not compile the jpg extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -87,7 +94,7 @@ int finder_setup() {
 
     status = regcomp(&mpeg, "^.*\\.mpeg$", 0);
     if (status) {
-        print("Could not compile the mpeg extension regex.");
+        print("finder: Could not compile the mpeg extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -100,7 +107,7 @@ int finder_setup() {
 
     status = regcomp(&mpg, "^.*\\.mpg$", 0);
     if (status) {
-        print("Could not compile the mpg extension regex.");
+        print("finder: Could not compile the mpg extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -114,7 +121,7 @@ int finder_setup() {
 
     status = regcomp(&pdf, "^.*\\.pdf$", 0);
     if (status) {
-        print("Could not compile the pdf extension regex.");
+        print("finder: Could not compile the pdf extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -129,7 +136,7 @@ int finder_setup() {
 
     status = regcomp(&php, "^.*\\.php$", 0);
     if (status) {
-        print("Could not compile the php extension regex.");
+        print("finder: Could not compile the php extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -145,7 +152,7 @@ int finder_setup() {
 
     status = regcomp(&png, "^.*\\.png$", 0);
     if (status) {
-        print("Could not compile the png extension regex.");
+        print("finder: Could not compile the png extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -162,7 +169,7 @@ int finder_setup() {
 
     status = regcomp(&py, "^.*\\.py$", 0);
     if (status) {
-        print("Could not compile the Python extension regex.");
+        print("finder: Could not compile the Python extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -181,7 +188,7 @@ int finder_setup() {
 
     status = regcomp(&txt, "^.*\\.txt$", 0);
     if (status) {
-        print("Could not compile the txt extension regex.");
+        print("finder: Could not compile the txt extension regex.");
         regfree(&doc);
         regfree(&docx);
         regfree(&gif);
@@ -201,6 +208,9 @@ int finder_setup() {
     return OK;
 }
 
+/*
+ * Description: Deallocates the regular expressions.
+ */
 void finder_clean() {
     regfree(&doc);
     regfree(&docx);
@@ -218,7 +228,17 @@ void finder_clean() {
     regfree(&txt);
 }
 
-// note: if "type" has spaces in it, this will work poorly
+// note: if
+/*
+ * Description: Allocates memory for a buffer containing the Content-Type string.
+ * (if the string contains spaces, this function may cause problems)
+ *
+ * In:
+ * const char *type: literal string
+ * char **contenttype: pointer to the memory address to be reserved
+ *
+ * Return: ERR in case of failure at any point. OK otherwise.
+ */
 int fill_content_type(const char *type, char **contenttype) {
     if (!type || !contenttype) {
         return ERR;
@@ -235,17 +255,27 @@ int fill_content_type(const char *type, char **contenttype) {
     return OK;
 }
 
-//text/plain: .txt, .php, .py
-//text/html: .html, .htm
-//image/gif: .gif
-//image/png: .png
-//image/jpeg: .jpeg, .jpg
-//video/mpeg: .mpeg, .mpg
-//application/msword: .doc, .docx
-//application/pdf: .pdf
-
-// opens and reads the file into the output buffer, loads the content type if it can
-// indicates wheter it could determine the content type in the return value
+/*
+ * Description: Attempts to find the file or script in the "resource" path and then
+ * determine it's filetype based on the filename extension in this fashion:
+ *
+ * text/plain: .txt, .php, .py
+ * text/html: .html, .htm
+ * image/gif: .gif
+ * image/png: .png
+ * image/jpeg: .jpeg, .jpg
+ * video/mpeg: .mpeg, .mpg
+ * application/msword: .doc, .docx
+ * application/pdf: .pdf
+ *
+ * In:
+ * int wait_s: desired timeout in seconds
+ *
+ * Return: ERR in case of failure at any point. NOT_FOUND if the resource does not exist
+ * or is a directory. NO_MATCH if the filetype could not be determined. TIMEOUT if the resource
+ * is a script and execution took longer than the specified value in seconds. Size of the output
+ * string otherwise.
+ */
 long finder_load(const char *resource, const char *input, int inlen, void **output, char **contenttype, int *check_flag) {
     int status;
     char errbuf[128];
@@ -269,6 +299,10 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
             // failed to execute
             return ERR;
         }
+        if (file_len == TIMEOUT) {
+            // TODO: propagate timeout and communicate 500 internal server error
+            return TIMEOUT;
+        }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
@@ -276,7 +310,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &php, errbuf, 128);
-        print("Regex (.php extension) match failed: %s", errbuf);
+        print("finder: Regex (.php extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -288,6 +322,10 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
             // failed to execute
             return ERR;
         }
+        if (file_len == TIMEOUT) {
+            // TODO: propagate timeout and communicate 500 internal server error
+            return TIMEOUT;
+        }
         if (fill_content_type("text/plain", contenttype) != ERR) {
             *check_flag = 1;
         }
@@ -295,14 +333,27 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &py, errbuf, 128);
-        print("Regex (.py extension) match failed: %s", errbuf);
+        print("finder: Regex (.py extension) match failed: %s", errbuf);
+        return ERR;
+    }
+
+    // check that we did not request a directory
+
+    struct stat s;
+    if (stat(resource, &s) == OK) {
+        if (s.st_mode & S_IFDIR) {
+            print("finder: %s is a directory", resource);
+            return NOT_FOUND;
+        }
+    } else {
+        print("finder: Could not stat file %s", resource);
         return ERR;
     }
 
     // if not, attempt to open the file
 
     if ((file_pointer = fopen(resource, "r")) == NULL) {
-        print("Could not read file %s", resource);
+        print("finder: Could not read file %s", resource);
         return NOT_FOUND;
     }
 
@@ -314,8 +365,15 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
     // reserve enough memory for the entire file and load it
     *output = malloc(file_len);
     fread(*output, (size_t)file_len, 1, file_pointer);
-    // this breaks, and I don't fully understand why
-    //*output[file_len] = '\0';
+
+    // done with the file pointer
+    fclose(file_pointer);
+
+    ////////////////////////////////////////////////////
+    // Execute each of the regular expressions on the //
+    // filename, with the respective error checks and //
+    // filling of the content type.                   //
+    ////////////////////////////////////////////////////
 
     status = regexec(&txt, resource, 0, NULL, 0);
     if (!status) {
@@ -325,7 +383,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &txt, errbuf, 128);
-        print("Regex (.txt extension) match failed: %s", errbuf);
+        print("finder: Regex (.txt extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -337,7 +395,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &html, errbuf, 128);
-        print("Regex (.html extension) match failed: %s", errbuf);
+        print("finder: Regex (.html extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -349,7 +407,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &htm, errbuf, 128);
-        print("Regex (.htm extension) match failed: %s", errbuf);
+        print("finder: Regex (.htm extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -361,7 +419,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &gif, errbuf, 128);
-        print("Regex (.gif extension) match failed: %s", errbuf);
+        print("finder: Regex (.gif extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -373,7 +431,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &png, errbuf, 128);
-        print("Regex (.png extension) match failed: %s", errbuf);
+        print("finder: Regex (.png extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -385,7 +443,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &jpeg, errbuf, 128);
-        print("Regex (.jpeg extension) match failed: %s", errbuf);
+        print("finder: Regex (.jpeg extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -397,7 +455,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &jpg, errbuf, 128);
-        print("Regex (.jpg extension) match failed: %s", errbuf);
+        print("finder: Regex (.jpg extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -409,7 +467,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &mpeg, errbuf, 128);
-        print("Regex (.mpeg extension) match failed: %s", errbuf);
+        print("finder: Regex (.mpeg extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -421,7 +479,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &mpg, errbuf, 128);
-        print("Regex (.mpg extension) match failed: %s", errbuf);
+        print("finder: Regex (.mpg extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -433,7 +491,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &docx, errbuf, 128);
-        print("Regex (.docx extension) match failed: %s", errbuf);
+        print("finder: Regex (.docx extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -445,7 +503,7 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &doc, errbuf, 128);
-        print("Regex (.doc extension) match failed: %s", errbuf);
+        print("finder: Regex (.doc extension) match failed: %s", errbuf);
         return ERR;
     }
 
@@ -457,11 +515,11 @@ long finder_load(const char *resource, const char *input, int inlen, void **outp
         return file_len;
     } else if (status != REG_NOMATCH) {
         regerror(status, &pdf, errbuf, 128);
-        print("Regex (.pdf extension) match failed: %s", errbuf);
+        print("finder: Regex (.pdf extension) match failed: %s", errbuf);
         return ERR;
     }
 
     // no match at all
-    print("Resource does not match any of the supported scripts.");
+    print("finder: Resource does not match any of the supported scripts.");
     return NO_MATCH;
 }
